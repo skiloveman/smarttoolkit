@@ -2,19 +2,42 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
+# Smart Toolkit
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/b295a5a0-ec73-46dc-a74b-3879632ebfa1
+Vite + React based calculator toolkit.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+Prerequisites: Node.js 20+
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. (Optional) Set `GEMINI_API_KEY` in `.env.local` if you use Gemini features.
+3. Start dev server:
    `npm run dev`
+
+## Build
+
+1. Create production build:
+   `npm run build`
+2. Output directory:
+   `dist`
+
+## Deploy To Cloudflare Pages
+
+Use these exact settings in Cloudflare Pages project configuration:
+
+1. Framework preset: `Vite`
+2. Build command: `npm run build`
+3. Build output directory: `dist`
+4. Root directory: `/`
+
+Important: Do not deploy project root files directly. Deploy built assets from `dist`.
+
+## Blank Screen Troubleshooting (Cloudflare)
+
+If the page is blank and browser console shows module MIME errors, the site is likely serving source `index.html` with this script:
+
+`<script type="module" src="/src/main.tsx"></script>`
+
+That means build output is not being served. Recheck Cloudflare Pages settings above and redeploy.
