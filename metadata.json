@@ -1,0 +1,6 @@
+{
+  "name": "생활 계산기, 필요한 도구들",
+  "description": "연봉 실수령, BMI, 퇴직금, 부가세, 전기요금, 환율 등 일상 생활과 금융/건강 관리 필수 계산기 및 가이드 모음",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
