@@ -18,6 +18,11 @@ import {
   Ruler,
   Percent,
   Sparkles,
+  Sparkle,
+  Landmark,
+  Clock,
+  Car,
+  Building2,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -65,6 +70,18 @@ export const Header: React.FC<HeaderProps> = ({
         return <Ruler className="w-4 h-4" />;
       case 'Percent':
         return <Percent className="w-4 h-4" />;
+      case 'Sparkles':
+        return <Sparkles className="w-4 h-4" />;
+      case 'Sparkle':
+        return <Sparkle className="w-4 h-4" />;
+      case 'Landmark':
+        return <Landmark className="w-4 h-4" />;
+      case 'Clock':
+        return <Clock className="w-4 h-4" />;
+      case 'Car':
+        return <Car className="w-4 h-4" />;
+      case 'Building2':
+        return <Building2 className="w-4 h-4" />;
       default:
         return <Calculator className="w-4 h-4" />;
     }

@@ -9,7 +9,13 @@ export type CalculatorId =
   | 'exchange'
   | 'date'
   | 'unit'
-  | 'percent';
+  | 'percent'
+  | 'lotto'
+  | 'gold'
+  | 'loan'
+  | 'hourly'
+  | 'carTax'
+  | 'realEstate';
 
 export interface CalculatorMeta {
   id: CalculatorId;

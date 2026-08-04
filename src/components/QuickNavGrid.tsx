@@ -14,6 +14,12 @@ import {
   Calculator,
   ArrowRight,
   Flame,
+  Sparkles,
+  Sparkle,
+  Landmark,
+  Clock,
+  Car,
+  Building2,
 } from 'lucide-react';
 
 interface Props {
@@ -43,6 +49,18 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, sear
         return <Ruler className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
       case 'Percent':
         return <Percent className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
+      case 'Sparkles':
+        return <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+      case 'Sparkle':
+        return <Sparkle className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+      case 'Landmark':
+        return <Landmark className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
+      case 'Clock':
+        return <Clock className="w-5 h-5 text-teal-600 dark:text-teal-400" />;
+      case 'Car':
+        return <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
+      case 'Building2':
+        return <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
       default:
         return <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
     }

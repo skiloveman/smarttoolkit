@@ -19,6 +19,12 @@ import { ExchangeCalculator } from './components/calculators/ExchangeCalculator'
 import { DateCalculator } from './components/calculators/DateCalculator';
 import { UnitCalculator } from './components/calculators/UnitCalculator';
 import { PercentCalculator } from './components/calculators/PercentCalculator';
+import { LottoCalculator } from './components/calculators/LottoCalculator';
+import { GoldCalculator } from './components/calculators/GoldCalculator';
+import { LoanCalculator } from './components/calculators/LoanCalculator';
+import { HourlyCalculator } from './components/calculators/HourlyCalculator';
+import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
+import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 
 import { Sparkles, ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
 
@@ -107,6 +113,18 @@ export default function App() {
         return <UnitCalculator onSaveHistory={saveToHistory} />;
       case 'percent':
         return <PercentCalculator onSaveHistory={saveToHistory} />;
+      case 'lotto':
+        return <LottoCalculator onSaveHistory={saveToHistory} />;
+      case 'gold':
+        return <GoldCalculator onSaveHistory={saveToHistory} />;
+      case 'loan':
+        return <LoanCalculator onSaveHistory={saveToHistory} />;
+      case 'hourly':
+        return <HourlyCalculator onSaveHistory={saveToHistory} />;
+      case 'carTax':
+        return <CarTaxCalculator onSaveHistory={saveToHistory} />;
+      case 'realEstate':
+        return <RealEstateCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }
