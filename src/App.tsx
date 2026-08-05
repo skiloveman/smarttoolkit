@@ -12,14 +12,6 @@ import { CalculatorGuideCard } from './components/CalculatorGuideCard';
 // Calculators
 import { SalaryCalculator } from './components/calculators/SalaryCalculator';
 import { BmiCalculator } from './components/calculators/BmiCalculator';
-import { BodyFatCalculator } from './components/calculators/BodyFatCalculator';
-import { WhrCalculator } from './components/calculators/WhrCalculator';
-import { IdealWeightCalculator } from './components/calculators/IdealWeightCalculator';
-import { BmrCalculator } from './components/calculators/BmrCalculator';
-import { TdeeCalculator } from './components/calculators/TdeeCalculator';
-import { MacroCalculator } from './components/calculators/MacroCalculator';
-import { WaterIntakeCalculator } from './components/calculators/WaterIntakeCalculator';
-import { SmokingQuitCalculator } from './components/calculators/SmokingQuitCalculator';
 import { SeveranceCalculator } from './components/calculators/SeveranceCalculator';
 import { VatCalculator } from './components/calculators/VatCalculator';
 import { ElectricityCalculator } from './components/calculators/ElectricityCalculator';
@@ -34,9 +26,8 @@ import { HourlyCalculator } from './components/calculators/HourlyCalculator';
 import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
-import { ScientificCalculator } from './components/calculators/ScientificCalculator';
 
-import { ShieldCheck, CheckCircle, MessageSquareWarning } from 'lucide-react';
+import { ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
@@ -69,25 +60,6 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Clear numeric inputs on click for faster data re-entry across calculators.
-  useEffect(() => {
-    const handleNumberInputClick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement)) return;
-      if (target.type !== 'number') return;
-      if (target.readOnly || target.disabled) return;
-
-      if (target.value !== '') {
-        target.value = '';
-      }
-    };
-
-    document.addEventListener('click', handleNumberInputClick, true);
-    return () => {
-      document.removeEventListener('click', handleNumberInputClick, true);
-    };
-  }, []);
-
   // Save history to LocalStorage
   const saveToHistory = (
     title: string,
@@ -104,15 +76,13 @@ export default function App() {
       details,
     };
 
-    setHistory((prev) => {
-      const updated = [newItem, ...prev].slice(0, 30); // Keep last 30
-      try {
-        localStorage.setItem('calc_history', JSON.stringify(updated));
-      } catch (e) {
-        console.error('Failed to save history', e);
-      }
-      return updated;
-    });
+    const updated = [newItem, ...history].slice(0, 30); // Keep last 30
+    setHistory(updated);
+    try {
+      localStorage.setItem('calc_history', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save history', e);
+    }
   };
 
   const handleClearHistory = () => {
@@ -130,22 +100,6 @@ export default function App() {
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
       case 'bmi':
         return <BmiCalculator onSaveHistory={saveToHistory} />;
-      case 'bodyFat':
-        return <BodyFatCalculator onSaveHistory={saveToHistory} />;
-      case 'whr':
-        return <WhrCalculator onSaveHistory={saveToHistory} />;
-      case 'idealWeight':
-        return <IdealWeightCalculator onSaveHistory={saveToHistory} />;
-      case 'bmr':
-        return <BmrCalculator onSaveHistory={saveToHistory} />;
-      case 'tdee':
-        return <TdeeCalculator onSaveHistory={saveToHistory} />;
-      case 'macro':
-        return <MacroCalculator onSaveHistory={saveToHistory} />;
-      case 'waterIntake':
-        return <WaterIntakeCalculator onSaveHistory={saveToHistory} />;
-      case 'smokingQuit':
-        return <SmokingQuitCalculator onSaveHistory={saveToHistory} />;
       case 'severance':
         return <SeveranceCalculator onSaveHistory={saveToHistory} />;
       case 'vat':
@@ -174,8 +128,6 @@ export default function App() {
         return <RealEstateCalculator onSaveHistory={saveToHistory} />;
       case 'ladderGame':
         return <LadderGameCalculator onSaveHistory={saveToHistory} />;
-      case 'scientific':
-        return <ScientificCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }
@@ -190,16 +142,6 @@ export default function App() {
           onSelectCategory={(cat) => {
             setActiveCategory(cat);
             setSearchQuery('');
-
-            const firstInCategory =
-              cat === 'all'
-                ? CALCULATOR_LIST[0]
-                : CALCULATOR_LIST.find((calculator) => calculator.category === cat);
-
-            if (firstInCategory) {
-              setActiveCalcId(firstInCategory.id);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
           }}
           activeCalcId={activeCalcId}
           onSelectCalc={(id) => {
@@ -279,17 +221,6 @@ export default function App() {
 
       {/* Footer & Compliance Section */}
       <Footer onOpenModal={(type) => setLegalModalType(type)} />
-
-      {/* Floating contact/report CTA */}
-      <button
-        onClick={() => setLegalModalType('contact')}
-        className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-900/30 hover:bg-rose-700 transition-colors"
-        aria-label="1:1문의 및 제보하기 열기"
-        title="1:1문의 및 제보하기"
-      >
-        <MessageSquareWarning className="w-4 h-4" />
-        <span>1:1문의 및 제보</span>
-      </button>
 
       {/* Legal & Terms Modals */}
       <LegalModals

@@ -75,7 +75,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               <li>
                 <button
                   onClick={() => onOpenModal('contact')}
-                  className="font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors"
+                  className="inline-flex items-center rounded-lg px-3 py-2 font-extrabold text-lg leading-none text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-colors"
                 >
                   1:1문의 및 제보
                 </button>
@@ -88,16 +88,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
           <div>
             © 2026 Smart ToolKit. ALL RIGHTS RESERVED.
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => onOpenModal('contact')}
-              className="px-3 py-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold tracking-wide hover:bg-rose-700 transition-colors"
-            >
-              1:1문의 및 제보
-            </button>
-            <div className="text-[10px] normal-case tracking-normal">
-              본 사이트의 산출 결과는 모의 산출 참고용이며, 정확한 적용은 관련 정식 기관에 문의하세요.
-            </div>
+          <div className="text-[10px] normal-case tracking-normal">
+            본 사이트의 산출 결과는 모의 산출 참고용이며, 정확한 적용은 관련 정식 기관에 문의하세요.
           </div>
         </div>
       </div>

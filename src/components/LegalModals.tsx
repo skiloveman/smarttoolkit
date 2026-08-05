@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React from 'react';
 import { X, ShieldCheck, FileText, AlertTriangle, Mail } from 'lucide-react';
 
 interface ModalProps {
@@ -8,94 +8,7 @@ interface ModalProps {
 }
 
 export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => {
-  const [nameOrNickname, setNameOrNickname] = useState('');
-  const [replyEmail, setReplyEmail] = useState('');
-  const [inquiryType, setInquiryType] = useState('오류 제보');
-  const [details, setDetails] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitResult, setSubmitResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const [submitPopup, setSubmitPopup] = useState<{ ok: boolean; message: string } | null>(null);
-
-  const getSuccessMessageByInquiryType = (inquiryTypeValue: string) => {
-    switch (inquiryTypeValue) {
-      case '오류 제보':
-        return '오류 제보가 접수되었습니다. 재현 확인 후 수정이 필요한 경우 빠르게 반영하겠습니다.';
-      case '기능 제안':
-        return '기능 제안이 접수되었습니다. 내부 검토 후 업데이트 계획에 반영하겠습니다.';
-      case '이용 문의':
-        return '이용 문의가 접수되었습니다. 확인 후 남겨주신 이메일로 답변드리겠습니다.';
-      case '제휴 문의':
-        return '제휴 문의가 접수되었습니다. 담당자가 확인 후 회신드리겠습니다.';
-      default:
-        return '문의가 정상 접수되었습니다. 빠르게 확인 후 답변드리겠습니다.';
-    }
-  };
-
-  useEffect(() => {
-    if (!isOpen || type !== 'contact') {
-      setNameOrNickname('');
-      setReplyEmail('');
-      setInquiryType('오류 제보');
-      setDetails('');
-      setIsSubmitting(false);
-      setSubmitResult(null);
-      setSubmitPopup(null);
-    }
-  }, [isOpen, type]);
-
   if (!isOpen || !type) return null;
-
-  const handleContactSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const trimmedName = nameOrNickname.trim();
-    const trimmedEmail = replyEmail.trim();
-    const trimmedDetails = details.trim();
-
-    if (!trimmedName || !trimmedEmail || !trimmedDetails) {
-      setSubmitResult({ ok: false, message: '모든 항목을 입력해 주세요.' });
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitResult(null);
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nameOrNickname: trimmedName,
-          replyEmail: trimmedEmail,
-          inquiryType,
-          details: trimmedDetails,
-        }),
-      });
-
-      const payload = await res.json().catch(() => ({ message: '응답 처리 중 오류가 발생했습니다.' }));
-
-      if (!res.ok) {
-        throw new Error(payload?.message || '문의 접수에 실패했습니다.');
-      }
-
-      const successMessage = getSuccessMessageByInquiryType(inquiryType);
-      setSubmitResult({ ok: true, message: successMessage });
-      setSubmitPopup({ ok: true, message: successMessage });
-      setNameOrNickname('');
-      setReplyEmail('');
-      setInquiryType('오류 제보');
-      setDetails('');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '문의 전송 중 오류가 발생했습니다.';
-      setSubmitResult({
-        ok: false,
-        message: errorMessage,
-      });
-      setSubmitPopup({ ok: false, message: errorMessage });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const getContent = () => {
     switch (type) {
@@ -164,91 +77,18 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
 
       case 'contact':
         return {
-          title: '1:1문의 및 제보하기',
+          title: '문의하기 & 피드백 (Contact Us)',
           icon: <Mail className="w-5 h-5 text-purple-500" />,
           body: (
-            <form onSubmit={handleContactSubmit} className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
-                성함/닉네임, 답변받을 이메일, 문의 유형, 상세 내용을 작성해 주시면
-                skiloveman@naver.com 으로 접수됩니다.
+                서비스 이용 중 요율 오류 제보, 신규 계산기 기능 요청, 제휴 및 기타 문의 사항이 있으시면 아래로 연락해 주시기 바랍니다.
               </p>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-200">성함/닉네임</label>
-                <input
-                  type="text"
-                  value={nameOrNickname}
-                  onChange={(e) => setNameOrNickname(e.target.value)}
-                  maxLength={60}
-                  required
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
-                  placeholder="예: 홍길동 또는 toolkit-user"
-                />
+              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-200">
+                • 이메일: skiloveman@gmail.com<br />
+                • 운영시간: 평일 09:00 ~ 18:00
               </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-200">답변받을 이메일</label>
-                <input
-                  type="email"
-                  value={replyEmail}
-                  onChange={(e) => setReplyEmail(e.target.value)}
-                  maxLength={120}
-                  required
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
-                  placeholder="예: yourname@example.com"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-200">문의 유형</label>
-                <select
-                  value={inquiryType}
-                  onChange={(e) => setInquiryType(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
-                >
-                  <option>오류 제보</option>
-                  <option>기능 제안</option>
-                  <option>이용 문의</option>
-                  <option>제휴 문의</option>
-                  <option>기타</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-slate-700 dark:text-slate-200">상세 내용</label>
-                <textarea
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
-                  maxLength={3000}
-                  required
-                  rows={6}
-                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
-                  placeholder="문의 또는 제보 내용을 자세히 적어주세요."
-                />
-              </div>
-
-              {submitResult && (
-                <div
-                  className={`rounded-xl px-3 py-2 text-xs font-semibold ${
-                    submitResult.ok
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
-                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
-                  }`}
-                >
-                  {submitResult.message}
-                </div>
-              )}
-
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSubmitting ? '전송 중...' : '문의하기 제출'}
-                </button>
-              </div>
-            </form>
+            </div>
           ),
         };
 
@@ -259,68 +99,36 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
 
   const current = getContent();
 
-  const handleSubmitPopupConfirm = () => {
-    const wasSuccess = submitPopup?.ok;
-    setSubmitPopup(null);
-
-    if (wasSuccess) {
-      onClose();
-    }
-  };
-
   return (
-    <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-        <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
-              {current.icon}
-              <span>{current.title}</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
+            {current.icon}
+            <span>{current.title}</span>
           </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-          {/* Modal Body */}
-          <div className="p-6 max-h-[70vh] overflow-y-auto">{current.body}</div>
+        {/* Modal Body */}
+        <div className="p-6 max-h-[70vh] overflow-y-auto">{current.body}</div>
 
-          {/* Modal Footer */}
-          <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
-            >
-              확인
-            </button>
-          </div>
+        {/* Modal Footer */}
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
+          >
+            확인
+          </button>
         </div>
       </div>
-
-      {submitPopup && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70">
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5">
-            <p className={`text-sm font-bold ${submitPopup.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              {submitPopup.ok ? '문의 접수 완료' : '문의 접수 실패'}
-            </p>
-            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              {submitPopup.message}
-            </p>
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleSubmitPopupConfirm}
-                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
