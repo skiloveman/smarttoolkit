@@ -22,7 +22,11 @@ const LADDER_HEIGHT = 420;
 const LADDER_WIDTH = 720;
 const TOP_PADDING = 28;
 const BOTTOM_PADDING = 28;
-const ANIMATION_DURATION_MS = 5600;
+const SPEED_OPTIONS = [
+  { key: 'fast', label: '빠름', duration: 4200 },
+  { key: 'normal', label: '보통', duration: 8600 },
+  { key: 'slow', label: '느림', duration: 30000 },
+] as const;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const getHorizontalPadding = (laneCount: number) => {
@@ -32,6 +36,24 @@ const getHorizontalPadding = (laneCount: number) => {
     return clamp(basePadding - extraTightening, 7, 34);
   }
   return clamp(basePadding, 12, 34);
+};
+
+const generateParticipantColors = (count: number) => {
+  const used = new Set<number>();
+  const colors: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    let hue = Math.floor(Math.random() * 360);
+    let guard = 0;
+    while (used.has(hue) && guard < 24) {
+      hue = Math.floor(Math.random() * 360);
+      guard += 1;
+    }
+    used.add(hue);
+    colors.push(`hsl(${hue} 78% 46%)`);
+  }
+
+  return colors;
 };
 
 const createDefaultNames = (count: number) =>
@@ -290,11 +312,13 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [laneCount, setLaneCount] = useState<number>(4);
   const [names, setNames] = useState<string[]>(createDefaultNames(4));
   const [results, setResults] = useState<string[]>(createDefaultResults(4));
+  const [participantColors, setParticipantColors] = useState<string[]>(() => generateParticipantColors(4));
+  const [speedKey, setSpeedKey] = useState<(typeof SPEED_OPTIONS)[number]['key']>('normal');
 
   const [runData, setRunData] = useState<RunData | null>(null);
   const [progressByLane, setProgressByLane] = useState<number[]>([]);
   const [revealedStartLanes, setRevealedStartLanes] = useState<boolean[]>([]);
-  const [activeStartLane, setActiveStartLane] = useState<number | null>(null);
+  const [animatingStartLanes, setAnimatingStartLanes] = useState<boolean[]>([]);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
   const rafRef = useRef<number | null>(null);
@@ -319,10 +343,11 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const next = clamp(value, 2, 12);
     setLaneCount(next);
     ensureLength(next);
+    setParticipantColors(generateParticipantColors(next));
     setRunData(null);
     setProgressByLane([]);
     setRevealedStartLanes([]);
-    setActiveStartLane(null);
+    setAnimatingStartLanes([]);
     setIsAnimating(false);
   };
 
@@ -387,35 +412,55 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     return true;
   };
 
-  const startSingleLaneAnimation = (startLane: number) => {
-    if (!runData || isAnimating) {
-      return;
-    }
-    if (revealedStartLanes[startLane]) {
+  const startLaneAnimation = (targetLanes: number[]) => {
+    if (!runData || isAnimating || targetLanes.length === 0) {
       return;
     }
 
+    const startProgress = [...progressByLane];
     setIsAnimating(true);
-    setActiveStartLane(startLane);
+    setAnimatingStartLanes((prev) => {
+      const next = prev.length === laneCount ? [...prev] : Array.from({ length: laneCount }, () => false);
+      targetLanes.forEach((lane) => {
+        next[lane] = true;
+      });
+      return next;
+    });
 
     const startedAt = performance.now();
 
     const tick = (now: number) => {
       const elapsed = now - startedAt;
-      const progress = clamp(elapsed / ANIMATION_DURATION_MS, 0, 1);
+      let allDone = true;
 
       setProgressByLane((prev) => {
         const next = [...prev];
-        next[startLane] = progress;
+        targetLanes.forEach((lane) => {
+          const base = startProgress[lane] ?? 0;
+          const remain = 1 - base;
+          const p = clamp(base + (elapsed / selectedDuration) * remain, 0, 1);
+          next[lane] = p;
+          if (p < 1) {
+            allDone = false;
+          }
+        });
         return next;
       });
 
-      if (progress >= 1) {
+      if (allDone) {
         setIsAnimating(false);
-        setActiveStartLane(null);
         setRevealedStartLanes((prev) => {
-          const next = [...prev];
-          next[startLane] = true;
+          const next = prev.length === laneCount ? [...prev] : Array.from({ length: laneCount }, () => false);
+          targetLanes.forEach((lane) => {
+            next[lane] = true;
+          });
+          return next;
+        });
+        setAnimatingStartLanes((prev) => {
+          const next = prev.length === laneCount ? [...prev] : Array.from({ length: laneCount }, () => false);
+          targetLanes.forEach((lane) => {
+            next[lane] = false;
+          });
           return next;
         });
         rafRef.current = null;
@@ -429,6 +474,23 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       cancelAnimationFrame(rafRef.current);
     }
     rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const startSingleLaneAnimation = (startLane: number) => {
+    if (revealedStartLanes[startLane]) {
+      return;
+    }
+    startLaneAnimation([startLane]);
+  };
+
+  const startAllLaneAnimation = () => {
+    if (!runData || isAnimating) {
+      return;
+    }
+    const pending = Array.from({ length: laneCount }, (_, lane) => lane).filter(
+      (lane) => !(revealedStartLanes[lane] ?? false)
+    );
+    startLaneAnimation(pending);
   };
 
   const handleRun = () => {
@@ -468,10 +530,11 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       finalLaneByStart,
     };
 
+    setParticipantColors(generateParticipantColors(laneCount));
     setRunData(nextRunData);
     setProgressByLane(Array.from({ length: laneCount }, () => 0));
     setRevealedStartLanes(Array.from({ length: laneCount }, () => false));
-    setActiveStartLane(null);
+    setAnimatingStartLanes(Array.from({ length: laneCount }, () => false));
     setIsAnimating(false);
     setSaved(false);
   };
@@ -485,9 +548,10 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setLaneCount(4);
     setNames(createDefaultNames(4));
     setResults(createDefaultResults(4));
+    setParticipantColors(generateParticipantColors(4));
     setProgressByLane([]);
     setRevealedStartLanes([]);
-    setActiveStartLane(null);
+    setAnimatingStartLanes([]);
     setRunData(null);
     setIsAnimating(false);
     setSaved(false);
@@ -513,6 +577,8 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const activeRows = runData?.rows ?? previewRows;
   const activeRowCount = runData?.rowCount ?? previewRowCount;
+  const selectedDuration =
+    SPEED_OPTIONS.find((opt) => opt.key === speedKey)?.duration ?? SPEED_OPTIONS[1].duration;
   const horizontalPadding = useMemo(() => getHorizontalPadding(laneCount), [laneCount]);
   const laneLeftPercents = useMemo(
     () =>
@@ -524,6 +590,19 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   );
 
   const allRevealed = runData ? revealedStartLanes.slice(0, laneCount).every(Boolean) : false;
+
+  const resultLaneColors = useMemo(() => {
+    if (!runData) {
+      return participantColors.slice(0, laneCount);
+    }
+
+    const colors = Array.from({ length: laneCount }, (_, lane) => participantColors[lane] ?? '#16a34a');
+    runData.finalLaneByStart.forEach((finalLane, startLane) => {
+      colors[finalLane] = participantColors[startLane] ?? '#16a34a';
+    });
+
+    return colors;
+  }, [runData, laneCount, participantColors]);
 
   const revealByBottomLane = useMemo(() => {
     if (!runData) {
@@ -550,24 +629,27 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       }
     });
 
-    if (activeStartLane !== null && !revealedStartLanes[activeStartLane]) {
-      const movingTargetLane = runData.finalLaneByStart[activeStartLane];
-      if (movingTargetLane !== undefined) {
-        mapped[movingTargetLane] = names[activeStartLane] ?? `참가자 ${activeStartLane + 1}`;
+    animatingStartLanes.forEach((isAnimatingLane, startLane) => {
+      if (!isAnimatingLane || (revealedStartLanes[startLane] ?? false)) {
+        return;
       }
-    }
+      const movingTargetLane = runData.finalLaneByStart[startLane];
+      if (movingTargetLane !== undefined) {
+        mapped[movingTargetLane] = names[startLane] ?? `참가자 ${startLane + 1}`;
+      }
+    });
 
     return mapped;
-  }, [runData, names, laneCount, revealByBottomLane, activeStartLane, revealedStartLanes]);
+  }, [runData, names, laneCount, revealByBottomLane, animatingStartLanes, revealedStartLanes]);
 
   const tokenPositions = (runData?.paths ?? [])
     .map((path, idx) => {
-      const isVisible = activeStartLane === idx || (revealedStartLanes[idx] ?? false);
+      const isVisible = (animatingStartLanes[idx] ?? false) || (revealedStartLanes[idx] ?? false);
       if (!isVisible) {
         return null;
       }
 
-      const progress = activeStartLane === idx ? progressByLane[idx] ?? 0 : 1;
+      const progress = animatingStartLanes[idx] ? progressByLane[idx] ?? 0 : 1;
       return {
         laneIndex: idx,
         point: getPointAtProgress(path, progress),
@@ -671,30 +753,61 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">참가자 선택</h4>
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                {activeStartLane !== null
-                  ? `${names[activeStartLane]} 진행 중...`
+                {animatingStartLanes.some(Boolean)
+                  ? `진행 중...`
                   : runData
                   ? '원하는 참가자를 눌러 내려보세요'
                   : '먼저 사다리를 생성해 주세요'}
               </span>
             </div>
 
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">진행속도</span>
+              {SPEED_OPTIONS.map((opt) => {
+                const isSelected = speedKey === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setSpeedKey(opt.key)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                disabled={!runData || isAnimating || allRevealed}
+                onClick={startAllLaneAnimation}
+                className="px-3 py-2 rounded-lg text-xs font-bold border bg-slate-900 text-white border-slate-900 disabled:opacity-60"
+              >
+                전체 동시 진행
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {Array.from({ length: laneCount }, (_, lane) => {
                 const done = revealedStartLanes[lane] ?? false;
-                const isActive = activeStartLane === lane;
+                const isActive = animatingStartLanes[lane] ?? false;
+                const laneColor = participantColors[lane] ?? '#2563eb';
                 return (
                   <button
                     key={`select-lane-${lane}`}
                     disabled={!runData || isAnimating || done}
                     onClick={() => startSingleLaneAnimation(lane)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                      isActive
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : done
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-60'
-                    }`}
+                    className="px-3 py-2 rounded-lg text-xs font-semibold border text-white transition-all disabled:opacity-60"
+                    style={{
+                      backgroundColor: laneColor,
+                      borderColor: laneColor,
+                      boxShadow: isActive ? `0 0 0 2px ${laneColor}55` : undefined,
+                    }}
                   >
                     {names[lane]} {done ? '완료' : ''}
                   </button>
@@ -767,8 +880,9 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
               {(runData?.paths ?? []).map((path, idx) => {
                 const isRevealed = revealedStartLanes[idx] ?? false;
-                const isActive = activeStartLane === idx;
+                const isActive = animatingStartLanes[idx] ?? false;
                 const progress = isActive ? progressByLane[idx] ?? 0 : isRevealed ? 1 : 0;
+                const laneColor = participantColors[idx] ?? '#22c55e';
 
                 if (progress <= 0) {
                   return null;
@@ -782,7 +896,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                     key={`traced-${idx}`}
                     points={points}
                     fill="none"
-                    stroke={isRevealed ? '#22c55e' : '#f97316'}
+                    stroke={laneColor}
                     strokeWidth={8}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -792,7 +906,12 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
               {tokenPositions.map((token) => (
                 <g key={`token-${token.laneIndex}`}>
-                  <circle cx={token.point.x} cy={token.point.y} r={11} fill="#0f172a" />
+                  <circle
+                    cx={token.point.x}
+                    cy={token.point.y}
+                    r={11}
+                    fill={participantColors[token.laneIndex] ?? '#0f172a'}
+                  />
                   <text
                     x={token.point.x}
                     y={token.point.y + 4}
@@ -823,8 +942,13 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {Array.from({ length: laneCount }, (_, i) => (
                 <div
                   key={`result-tag-${i}`}
-                  className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
-                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(460 / laneCount))}px` }}
+                  className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-white border rounded-md px-1.5 py-0.5 truncate"
+                  style={{
+                    left: `${laneLeftPercents[i]}%`,
+                    width: `${Math.max(36, Math.floor(460 / laneCount))}px`,
+                    backgroundColor: resultLaneColors[i] ?? '#16a34a',
+                    borderColor: resultLaneColors[i] ?? '#16a34a',
+                  }}
                 >
                   {results[i]}
                 </div>
@@ -841,7 +965,16 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             {runData.finalLaneByStart.map((finalLane, startLane) => (
               <div
                 key={`match-${startLane}`}
-                className="text-xs font-medium text-slate-700 dark:text-slate-300 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2"
+                className="text-xs font-medium rounded-lg border px-3 py-2 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                style={
+                  revealedStartLanes[startLane]
+                    ? {
+                        backgroundColor: participantColors[startLane] ?? '#2563eb',
+                        borderColor: participantColors[startLane] ?? '#2563eb',
+                        color: '#ffffff',
+                      }
+                    : undefined
+                }
               >
                 {revealedStartLanes[startLane]
                   ? `${names[startLane]} → ${results[finalLane]}`
