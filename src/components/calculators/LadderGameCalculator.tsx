@@ -288,6 +288,7 @@ const getPartialPolyline = (points: Point[], progress: number): Point[] => {
 
 export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [laneCount, setLaneCount] = useState<number>(4);
+  const [laneCountInput, setLaneCountInput] = useState<string>('4');
   const [names, setNames] = useState<string[]>(createDefaultNames(4));
   const [results, setResults] = useState<string[]>(createDefaultResults(4));
 
@@ -318,12 +319,36 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const handleLaneCountChange = (value: number) => {
     const next = clamp(value, 2, 12);
     setLaneCount(next);
+    setLaneCountInput(String(next));
     ensureLength(next);
     setRunData(null);
     setProgressByLane([]);
     setRevealedStartLanes([]);
     setActiveStartLane(null);
     setIsAnimating(false);
+  };
+
+  const handleLaneCountInputChange = (value: string) => {
+    if (!/^\d*$/.test(value)) {
+      return;
+    }
+
+    setLaneCountInput(value);
+
+    if (value === '') {
+      return;
+    }
+
+    handleLaneCountChange(Number(value));
+  };
+
+  const handleLaneCountInputBlur = () => {
+    if (laneCountInput.trim() === '') {
+      setLaneCountInput(String(laneCount));
+      return;
+    }
+
+    handleLaneCountChange(Number(laneCountInput));
   };
 
   const updateName = (index: number, value: string) => {
@@ -594,8 +619,9 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={2}
               max={12}
-              value={laneCount}
-              onChange={(e) => handleLaneCountChange(Number(e.target.value))}
+              value={laneCountInput}
+              onChange={(e) => handleLaneCountInputChange(e.target.value)}
+              onBlur={handleLaneCountInputBlur}
               className="w-24 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

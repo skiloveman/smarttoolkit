@@ -166,6 +166,13 @@ export default function App() {
           onSelectCategory={(cat) => {
             setActiveCategory(cat);
             setSearchQuery('');
+            const firstInCategory = CALCULATOR_LIST.find(
+              (c) => cat === 'all' || c.category === cat
+            );
+            if (firstInCategory) {
+              setActiveCalcId(firstInCategory.id);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           activeCalcId={activeCalcId}
           onSelectCalc={(id) => {
@@ -233,6 +240,7 @@ export default function App() {
 
           {/* Quick Calculator Switcher Grid */}
           <QuickNavGrid
+            activeCategory={activeCategory}
             activeCalcId={activeCalcId}
             onSelectCalc={(id) => {
               setActiveCalcId(id);

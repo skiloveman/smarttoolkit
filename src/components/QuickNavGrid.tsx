@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalculatorId, CalculatorMeta } from '../types';
+import { CalculatorCategory, CalculatorId } from '../types';
 import { CALCULATOR_LIST } from '../data/calculatorInfo';
 import {
   Banknote,
@@ -23,12 +23,13 @@ import {
 } from 'lucide-react';
 
 interface Props {
+  activeCategory: CalculatorCategory;
   activeCalcId: CalculatorId;
   onSelectCalc: (id: CalculatorId) => void;
   searchQuery: string;
 }
 
-export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, searchQuery }) => {
+export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, onSelectCalc, searchQuery }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'Banknote':
@@ -68,8 +69,11 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, sear
 
   const filtered = CALCULATOR_LIST.filter(
     (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.shortDesc.toLowerCase().includes(searchQuery.toLowerCase())
+      (activeCategory === 'all' || c.category === activeCategory) &&
+      (
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.shortDesc.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
   return (
