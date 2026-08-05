@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Mail } from 'lucide-react';
+import { Calculator } from 'lucide-react';
 
 interface FooterProps {
   onOpenModal: (type: 'terms' | 'privacy' | 'disclaimer' | 'contact') => void;
@@ -70,15 +70,6 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
                   className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   법적고지 및 면책사항
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onOpenModal('contact')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-600 text-white font-bold shadow-sm hover:bg-rose-700 dark:hover:bg-rose-500 transition-colors animate-pulse"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  1:1문의 및 제보하기
                 </button>
               </li>
             </ul>

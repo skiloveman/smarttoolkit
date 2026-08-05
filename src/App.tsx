@@ -248,12 +248,6 @@ export default function App() {
               >
                 계산기 바로 시작
               </button>
-              <button
-                onClick={() => setLegalModalType('contact')}
-                className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs"
-              >
-                1:1 문의/제보 바로가기
-              </button>
             </div>
           </div>
 
