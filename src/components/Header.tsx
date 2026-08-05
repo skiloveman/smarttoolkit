@@ -168,6 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
             { id: 'finance', label: 'FINANCE' },
             { id: 'health', label: 'HEALTH' },
             { id: 'life', label: 'UTILITIES' },
+            { id: 'games', label: 'GAMES' },
           ].map((cat) => (
             <button
               key={cat.id}

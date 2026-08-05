@@ -3,6 +3,14 @@ export type CalculatorCategory = 'all' | 'finance' | 'health' | 'life' | 'games'
 export type CalculatorId = 
   | 'salary' 
   | 'bmi' 
+  | 'bmr'
+  | 'bodyFat'
+  | 'idealWeight'
+  | 'macro'
+  | 'smokingQuit'
+  | 'tdee'
+  | 'waterIntake'
+  | 'whr'
   | 'severance' 
   | 'vat' 
   | 'electricity' 
@@ -16,16 +24,7 @@ export type CalculatorId =
   | 'hourly'
   | 'carTax'
   | 'realEstate'
-  | 'ladderGame'
-  | 'scientific'
-  | 'bodyFat'
-  | 'whr'
-  | 'idealWeight'
-  | 'bmr'
-  | 'tdee'
-  | 'macro'
-  | 'waterIntake'
-  | 'smokingQuit';
+  | 'ladderGame';
 
 export interface CalculatorMeta {
   id: CalculatorId;

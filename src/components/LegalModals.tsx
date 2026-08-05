@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ShieldCheck, FileText, AlertTriangle, Mail } from 'lucide-react';
 
 interface ModalProps {
@@ -7,7 +7,104 @@ interface ModalProps {
   type: 'terms' | 'privacy' | 'disclaimer' | 'contact' | null;
 }
 
+interface ContactFormState {
+  nameOrNickname: string;
+  replyEmail: string;
+  inquiryType: string;
+  details: string;
+}
+
+interface ContactToast {
+  kind: 'success' | 'error';
+  text: string;
+}
+
 export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => {
+  const [contactForm, setContactForm] = useState<ContactFormState>({
+    nameOrNickname: '',
+    replyEmail: '',
+    inquiryType: '일반 문의',
+    details: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<ContactToast | null>(null);
+  const [isToastVisible, setIsToastVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || type !== 'contact') return;
+    setToast(null);
+    setIsToastVisible(false);
+  }, [isOpen, type]);
+
+  useEffect(() => {
+    if (!toast) return;
+
+    setIsToastVisible(false);
+    const frame = window.requestAnimationFrame(() => {
+      setIsToastVisible(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!toast || toast.kind !== 'success' || !isOpen || type !== 'contact') return;
+
+    const hideTimer = window.setTimeout(() => {
+      setIsToastVisible(false);
+    }, 1050);
+
+    const closeTimer = window.setTimeout(() => {
+      setToast(null);
+      onClose();
+    }, 1380);
+
+    return () => {
+      window.clearTimeout(hideTimer);
+      window.clearTimeout(closeTimer);
+    };
+  }, [toast, isOpen, type, onClose]);
+
+  const submitContact = async (payload: ContactFormState) => {
+    setToast(null);
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+
+      if (!res.ok || !data?.ok) {
+        setIsToastVisible(false);
+        setToast({
+          kind: 'error',
+          text: data?.message || '전송 실패: 잠시 후 재시도해 주세요.',
+        });
+        return;
+      }
+
+      setIsToastVisible(false);
+      setToast({ kind: 'success', text: data.message || '문의가 접수되었습니다. 창이 곧 닫힙니다.' });
+      setContactForm((prev) => ({ ...prev, details: '' }));
+    } catch {
+      setIsToastVisible(false);
+      setToast({ kind: 'error', text: '네트워크 오류가 발생했습니다. 재시도해 주세요.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await submitContact(contactForm);
+  };
+
   if (!isOpen || !type) return null;
 
   const getContent = () => {
@@ -80,15 +177,89 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
           title: '문의하기 & 피드백 (Contact Us)',
           icon: <Mail className="w-5 h-5 text-purple-500" />,
           body: (
-            <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <form onSubmit={handleContactSubmit} className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
-                서비스 이용 중 요율 오류 제보, 신규 계산기 기능 요청, 제휴 및 기타 문의 사항이 있으시면 아래로 연락해 주시기 바랍니다.
+                서비스 이용 중 요율 오류 제보, 신규 계산기 기능 요청, 제휴 및 기타 문의 사항을 아래 폼으로 보내주시면
+                운영자 메일(skiloveman@naver.com)로 즉시 전달됩니다.
               </p>
-              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-200">
-                • 이메일: skiloveman@gmail.com<br />
-                • 운영시간: 평일 09:00 ~ 18:00
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="space-y-1">
+                  <span className="font-semibold">성함/닉네임</span>
+                  <input
+                    required
+                    value={contactForm.nameOrNickname}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, nameOrNickname: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                    placeholder="홍길동"
+                  />
+                </label>
+                <label className="space-y-1">
+                  <span className="font-semibold">답변 이메일</span>
+                  <input
+                    required
+                    type="email"
+                    value={contactForm.replyEmail}
+                    onChange={(e) => setContactForm((prev) => ({ ...prev, replyEmail: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                    placeholder="name@example.com"
+                  />
+                </label>
               </div>
-            </div>
+
+              <label className="space-y-1 block">
+                <span className="font-semibold">문의 유형</span>
+                <select
+                  value={contactForm.inquiryType}
+                  onChange={(e) => setContactForm((prev) => ({ ...prev, inquiryType: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                >
+                  <option>일반 문의</option>
+                  <option>오류 제보</option>
+                  <option>기능 요청</option>
+                  <option>제휴 문의</option>
+                </select>
+              </label>
+
+              <label className="space-y-1 block">
+                <span className="font-semibold">상세 내용</span>
+                <textarea
+                  required
+                  rows={6}
+                  value={contactForm.details}
+                  onChange={(e) => setContactForm((prev) => ({ ...prev, details: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2"
+                  placeholder="문의 또는 제보 내용을 입력해 주세요."
+                />
+              </label>
+
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  운영시간: 평일 09:00 ~ 18:00
+                </div>
+                <div className="flex items-center gap-2">
+                  {toast?.kind === 'error' && (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => {
+                        void submitContact(contactForm);
+                      }}
+                      className="px-3 py-2 rounded-lg border border-rose-300 text-rose-700 dark:border-rose-700 dark:text-rose-300 disabled:opacity-60 font-semibold transition-colors"
+                    >
+                      재시도
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white font-semibold transition-colors"
+                  >
+                    {isSubmitting ? '전송 중...' : '문의 보내기'}
+                  </button>
+                </div>
+              </div>
+            </form>
           ),
         };
 
@@ -101,6 +272,23 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      {type === 'contact' && toast && (
+        <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
+          <div
+            className={`px-4 py-2 rounded-xl text-sm font-semibold shadow-lg ${
+              toast.kind === 'success'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-rose-600 text-white'
+            } transition-all duration-300 ease-out ${
+              isToastVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-3'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {toast.text}
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">

@@ -12,6 +12,14 @@ import { CalculatorGuideCard } from './components/CalculatorGuideCard';
 // Calculators
 import { SalaryCalculator } from './components/calculators/SalaryCalculator';
 import { BmiCalculator } from './components/calculators/BmiCalculator';
+import { BmrCalculator } from './components/calculators/BmrCalculator';
+import { BodyFatCalculator } from './components/calculators/BodyFatCalculator';
+import { IdealWeightCalculator } from './components/calculators/IdealWeightCalculator';
+import { MacroCalculator } from './components/calculators/MacroCalculator';
+import { SmokingQuitCalculator } from './components/calculators/SmokingQuitCalculator';
+import { TdeeCalculator } from './components/calculators/TdeeCalculator';
+import { WaterIntakeCalculator } from './components/calculators/WaterIntakeCalculator';
+import { WhrCalculator } from './components/calculators/WhrCalculator';
 import { SeveranceCalculator } from './components/calculators/SeveranceCalculator';
 import { VatCalculator } from './components/calculators/VatCalculator';
 import { ElectricityCalculator } from './components/calculators/ElectricityCalculator';
@@ -27,7 +35,7 @@ import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
 
-import { ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
+import { ShieldCheck, CheckCircle, MessageCircleWarning } from 'lucide-react';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
@@ -100,6 +108,22 @@ export default function App() {
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
       case 'bmi':
         return <BmiCalculator onSaveHistory={saveToHistory} />;
+      case 'bmr':
+        return <BmrCalculator onSaveHistory={saveToHistory} />;
+      case 'bodyFat':
+        return <BodyFatCalculator onSaveHistory={saveToHistory} />;
+      case 'idealWeight':
+        return <IdealWeightCalculator onSaveHistory={saveToHistory} />;
+      case 'macro':
+        return <MacroCalculator onSaveHistory={saveToHistory} />;
+      case 'smokingQuit':
+        return <SmokingQuitCalculator onSaveHistory={saveToHistory} />;
+      case 'tdee':
+        return <TdeeCalculator onSaveHistory={saveToHistory} />;
+      case 'waterIntake':
+        return <WaterIntakeCalculator onSaveHistory={saveToHistory} />;
+      case 'whr':
+        return <WhrCalculator onSaveHistory={saveToHistory} />;
       case 'severance':
         return <SeveranceCalculator onSaveHistory={saveToHistory} />;
       case 'vat':
@@ -221,6 +245,17 @@ export default function App() {
 
       {/* Footer & Compliance Section */}
       <Footer onOpenModal={(type) => setLegalModalType(type)} />
+
+      {/* Sticky quick contact CTA */}
+      <button
+        onClick={() => setLegalModalType('contact')}
+        className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 sm:px-5 sm:py-3 text-sm sm:text-base font-extrabold shadow-xl shadow-rose-900/30 transition-colors"
+        aria-label="1:1문의 및 제보하기"
+        title="1:1문의 및 제보하기"
+      >
+        <MessageCircleWarning className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span>1:1문의 및 제보</span>
+      </button>
 
       {/* Legal & Terms Modals */}
       <LegalModals
