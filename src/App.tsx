@@ -25,8 +25,9 @@ import { LoanCalculator } from './components/calculators/LoanCalculator';
 import { HourlyCalculator } from './components/calculators/HourlyCalculator';
 import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
+import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
 
-import { Sparkles, ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
+import { ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
@@ -125,6 +126,8 @@ export default function App() {
         return <CarTaxCalculator onSaveHistory={saveToHistory} />;
       case 'realEstate':
         return <RealEstateCalculator onSaveHistory={saveToHistory} />;
+      case 'ladderGame':
+        return <LadderGameCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }
@@ -158,10 +161,6 @@ export default function App() {
           {/* Top Banner & Title Box */}
           <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div className="max-w-2xl space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/80 border border-blue-100 dark:border-blue-900 text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                <span>2025/2026 최신 고시 요율 및 관계 법령 반영</span>
-              </div>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
                 {activeCalcMeta.name}
               </h2>
