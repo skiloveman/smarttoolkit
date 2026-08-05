@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Calendar, Copy, Check, Clock, Plus, Minus, BookmarkPlus } from 'lucide-react';
+import { formatYmd } from '../../utils/calculators';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatYmd(new Date());
 
   // Tab 1: D-day
   const [targetDate, setTargetDate] = useState(todayStr);
@@ -33,7 +34,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const calcAddedDate = () => {
     const b = new Date(baseDate);
     b.setDate(b.getDate() + addDays);
-    return b.toISOString().split('T')[0];
+    return formatYmd(b);
   };
 
   const addedDateResult = calcAddedDate();
@@ -84,6 +85,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             onChange={(e) => setTargetDate(e.target.value)}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3 text-xs font-bold text-slate-800 dark:text-slate-200"
           />
+          <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {targetDate}</div>
         </div>
 
         <div className="p-5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-center">
@@ -122,6 +124,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               onChange={(e) => setBaseDate(e.target.value)}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
+            <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {baseDate}</div>
           </div>
 
           <div>

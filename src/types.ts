@@ -1,4 +1,4 @@
-export type CalculatorCategory = 'all' | 'finance' | 'health' | 'life';
+export type CalculatorCategory = 'all' | 'finance' | 'health' | 'life' | 'games';
 
 export type CalculatorId = 
   | 'salary' 
@@ -17,13 +17,21 @@ export type CalculatorId =
   | 'carTax'
   | 'realEstate'
   | 'ladderGame'
-  | 'scientific';
+  | 'scientific'
+  | 'bodyFat'
+  | 'whr'
+  | 'idealWeight'
+  | 'bmr'
+  | 'tdee'
+  | 'macro'
+  | 'waterIntake'
+  | 'smokingQuit';
 
 export interface CalculatorMeta {
   id: CalculatorId;
   name: string;
   shortDesc: string;
-  category: 'finance' | 'health' | 'life';
+  category: 'finance' | 'health' | 'life' | 'games';
   iconName: string;
   badge?: string;
   popular?: boolean;

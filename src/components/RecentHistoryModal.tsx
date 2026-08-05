@@ -1,6 +1,7 @@
 import React from 'react';
 import { CalculationHistoryItem } from '../types';
 import { X, History, Trash2, Copy, Check } from 'lucide-react';
+import { formatYmd } from '../utils/calculators';
 
 interface Props {
   isOpen: boolean;
@@ -60,12 +61,7 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
                     {item.calculatorName}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {new Date(item.timestamp).toLocaleString('ko-KR', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {formatYmd(item.timestamp)}
                   </span>
                 </div>
 

@@ -77,7 +77,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
                   onClick={() => onOpenModal('contact')}
                   className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
-                  문의하기 (Contact)
+                  1:1문의 및 제보하기
                 </button>
               </li>
             </ul>

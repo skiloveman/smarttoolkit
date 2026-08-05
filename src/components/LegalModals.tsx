@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { X, ShieldCheck, FileText, AlertTriangle, Mail } from 'lucide-react';
 
 interface ModalProps {
@@ -8,7 +8,73 @@ interface ModalProps {
 }
 
 export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => {
+  const [nameOrNickname, setNameOrNickname] = useState('');
+  const [replyEmail, setReplyEmail] = useState('');
+  const [inquiryType, setInquiryType] = useState('오류 제보');
+  const [details, setDetails] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || type !== 'contact') {
+      setNameOrNickname('');
+      setReplyEmail('');
+      setInquiryType('오류 제보');
+      setDetails('');
+      setIsSubmitting(false);
+      setSubmitResult(null);
+    }
+  }, [isOpen, type]);
+
   if (!isOpen || !type) return null;
+
+  const handleContactSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const trimmedName = nameOrNickname.trim();
+    const trimmedEmail = replyEmail.trim();
+    const trimmedDetails = details.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedDetails) {
+      setSubmitResult({ ok: false, message: '모든 항목을 입력해 주세요.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitResult(null);
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nameOrNickname: trimmedName,
+          replyEmail: trimmedEmail,
+          inquiryType,
+          details: trimmedDetails,
+        }),
+      });
+
+      const payload = await res.json().catch(() => ({ message: '응답 처리 중 오류가 발생했습니다.' }));
+
+      if (!res.ok) {
+        throw new Error(payload?.message || '문의 접수에 실패했습니다.');
+      }
+
+      setSubmitResult({ ok: true, message: '문의가 정상 접수되었습니다. 빠르게 확인 후 답변드리겠습니다.' });
+      setNameOrNickname('');
+      setReplyEmail('');
+      setInquiryType('오류 제보');
+      setDetails('');
+    } catch (err) {
+      setSubmitResult({
+        ok: false,
+        message: err instanceof Error ? err.message : '문의 전송 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getContent = () => {
     switch (type) {
@@ -77,18 +143,91 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
 
       case 'contact':
         return {
-          title: '문의하기 & 피드백 (Contact Us)',
+          title: '1:1문의 및 제보하기',
           icon: <Mail className="w-5 h-5 text-purple-500" />,
           body: (
-            <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <form onSubmit={handleContactSubmit} className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
-                서비스 이용 중 요율 오류 제보, 신규 계산기 기능 요청, 제휴 및 기타 문의 사항이 있으시면 아래로 연락해 주시기 바랍니다.
+                성함/닉네임, 답변받을 이메일, 문의 유형, 상세 내용을 작성해 주시면
+                skiloveman@naver.com 으로 접수됩니다.
               </p>
-              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-slate-800 dark:text-slate-200">
-                • 이메일: skiloveman@gmail.com<br />
-                • 운영시간: 평일 09:00 ~ 18:00
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-200">성함/닉네임</label>
+                <input
+                  type="text"
+                  value={nameOrNickname}
+                  onChange={(e) => setNameOrNickname(e.target.value)}
+                  maxLength={60}
+                  required
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
+                  placeholder="예: 홍길동 또는 toolkit-user"
+                />
               </div>
-            </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-200">답변받을 이메일</label>
+                <input
+                  type="email"
+                  value={replyEmail}
+                  onChange={(e) => setReplyEmail(e.target.value)}
+                  maxLength={120}
+                  required
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
+                  placeholder="예: yourname@example.com"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-200">문의 유형</label>
+                <select
+                  value={inquiryType}
+                  onChange={(e) => setInquiryType(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
+                >
+                  <option>오류 제보</option>
+                  <option>기능 제안</option>
+                  <option>이용 문의</option>
+                  <option>제휴 문의</option>
+                  <option>기타</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-slate-700 dark:text-slate-200">상세 내용</label>
+                <textarea
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  maxLength={3000}
+                  required
+                  rows={6}
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-100"
+                  placeholder="문의 또는 제보 내용을 자세히 적어주세요."
+                />
+              </div>
+
+              {submitResult && (
+                <div
+                  className={`rounded-xl px-3 py-2 text-xs font-semibold ${
+                    submitResult.ok
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
+                      : 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+                  }`}
+                >
+                  {submitResult.message}
+                </div>
+              )}
+
+              <div className="pt-1 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSubmitting ? '전송 중...' : '문의하기 제출'}
+                </button>
+              </div>
+            </form>
           ),
         };
 

@@ -21,6 +21,7 @@ import {
   Car,
   Building2,
   Sigma,
+  Droplets,
 } from 'lucide-react';
 
 interface Props {
@@ -64,6 +65,8 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, sear
         return <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
       case 'Sigma':
         return <Sigma className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
+      case 'Droplets':
+        return <Droplets className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />;
       default:
         return <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
     }

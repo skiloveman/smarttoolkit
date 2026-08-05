@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { calculateSeverance, formatKrw } from '../../utils/calculators';
+import { calculateSeverance, formatKrw, formatYmd } from '../../utils/calculators';
 import { SeveranceInput } from '../../types';
 import { Coins, Copy, Check, Calendar, AlertCircle, BookmarkPlus } from 'lucide-react';
 
@@ -9,10 +9,10 @@ interface Props {
 
 export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   // Default dates: 3 years ago to today
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatYmd(new Date());
   const threeYearsAgo = new Date();
   threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
-  const startStr = threeYearsAgo.toISOString().split('T')[0];
+  const startStr = formatYmd(threeYearsAgo);
 
   const [joinDate, setJoinDate] = useState<string>(startStr);
   const [retireDate, setRetireDate] = useState<string>(todayStr);
@@ -95,6 +95,7 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 onChange={(e) => setJoinDate(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {joinDate}</div>
             </div>
 
             <div>
@@ -108,6 +109,7 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 onChange={(e) => setRetireDate(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
+              <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {retireDate}</div>
             </div>
           </div>
 

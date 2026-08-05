@@ -12,6 +12,14 @@ import { CalculatorGuideCard } from './components/CalculatorGuideCard';
 // Calculators
 import { SalaryCalculator } from './components/calculators/SalaryCalculator';
 import { BmiCalculator } from './components/calculators/BmiCalculator';
+import { BodyFatCalculator } from './components/calculators/BodyFatCalculator';
+import { WhrCalculator } from './components/calculators/WhrCalculator';
+import { IdealWeightCalculator } from './components/calculators/IdealWeightCalculator';
+import { BmrCalculator } from './components/calculators/BmrCalculator';
+import { TdeeCalculator } from './components/calculators/TdeeCalculator';
+import { MacroCalculator } from './components/calculators/MacroCalculator';
+import { WaterIntakeCalculator } from './components/calculators/WaterIntakeCalculator';
+import { SmokingQuitCalculator } from './components/calculators/SmokingQuitCalculator';
 import { SeveranceCalculator } from './components/calculators/SeveranceCalculator';
 import { VatCalculator } from './components/calculators/VatCalculator';
 import { ElectricityCalculator } from './components/calculators/ElectricityCalculator';
@@ -61,6 +69,25 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Clear numeric inputs on click for faster data re-entry across calculators.
+  useEffect(() => {
+    const handleNumberInputClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.type !== 'number') return;
+      if (target.readOnly || target.disabled) return;
+
+      if (target.value !== '') {
+        target.value = '';
+      }
+    };
+
+    document.addEventListener('click', handleNumberInputClick, true);
+    return () => {
+      document.removeEventListener('click', handleNumberInputClick, true);
+    };
+  }, []);
+
   // Save history to LocalStorage
   const saveToHistory = (
     title: string,
@@ -101,6 +128,22 @@ export default function App() {
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
       case 'bmi':
         return <BmiCalculator onSaveHistory={saveToHistory} />;
+      case 'bodyFat':
+        return <BodyFatCalculator onSaveHistory={saveToHistory} />;
+      case 'whr':
+        return <WhrCalculator onSaveHistory={saveToHistory} />;
+      case 'idealWeight':
+        return <IdealWeightCalculator onSaveHistory={saveToHistory} />;
+      case 'bmr':
+        return <BmrCalculator onSaveHistory={saveToHistory} />;
+      case 'tdee':
+        return <TdeeCalculator onSaveHistory={saveToHistory} />;
+      case 'macro':
+        return <MacroCalculator onSaveHistory={saveToHistory} />;
+      case 'waterIntake':
+        return <WaterIntakeCalculator onSaveHistory={saveToHistory} />;
+      case 'smokingQuit':
+        return <SmokingQuitCalculator onSaveHistory={saveToHistory} />;
       case 'severance':
         return <SeveranceCalculator onSaveHistory={saveToHistory} />;
       case 'vat':
@@ -145,6 +188,16 @@ export default function App() {
           onSelectCategory={(cat) => {
             setActiveCategory(cat);
             setSearchQuery('');
+
+            const firstInCategory =
+              cat === 'all'
+                ? CALCULATOR_LIST[0]
+                : CALCULATOR_LIST.find((calculator) => calculator.category === cat);
+
+            if (firstInCategory) {
+              setActiveCalcId(firstInCategory.id);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
           }}
           activeCalcId={activeCalcId}
           onSelectCalc={(id) => {

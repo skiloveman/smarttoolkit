@@ -24,6 +24,7 @@ import {
   Car,
   Building2,
   Sigma,
+  Droplets,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -85,6 +86,8 @@ export const Header: React.FC<HeaderProps> = ({
         return <Building2 className="w-4 h-4" />;
       case 'Sigma':
         return <Sigma className="w-4 h-4" />;
+      case 'Droplets':
+        return <Droplets className="w-4 h-4" />;
       default:
         return <Calculator className="w-4 h-4" />;
     }
@@ -171,6 +174,7 @@ export const Header: React.FC<HeaderProps> = ({
             { id: 'finance', label: 'FINANCE' },
             { id: 'health', label: 'HEALTH' },
             { id: 'life', label: 'UTILITIES' },
+            { id: 'games', label: 'GAMES' },
           ].map((cat) => (
             <button
               key={cat.id}
