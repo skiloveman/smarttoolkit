@@ -104,13 +104,15 @@ export default function App() {
       details,
     };
 
-    const updated = [newItem, ...history].slice(0, 30); // Keep last 30
-    setHistory(updated);
-    try {
-      localStorage.setItem('calc_history', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save history', e);
-    }
+    setHistory((prev) => {
+      const updated = [newItem, ...prev].slice(0, 30); // Keep last 30
+      try {
+        localStorage.setItem('calc_history', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save history', e);
+      }
+      return updated;
+    });
   };
 
   const handleClearHistory = () => {

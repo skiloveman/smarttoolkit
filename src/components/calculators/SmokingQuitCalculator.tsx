@@ -16,6 +16,22 @@ function daysBetween(startText: string, endText: string): number {
   return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
 }
 
+function splitDaysToYmd(totalDays: number): { years: number; months: number; days: number } {
+  const safeDays = Math.max(0, Math.floor(totalDays));
+  const years = Math.floor(safeDays / 365);
+  const remainAfterYears = safeDays % 365;
+  const months = Math.floor(remainAfterYears / 30);
+  const days = remainAfterYears % 30;
+  return { years, months, days };
+}
+
+function formatDurationKorean(duration: { years: number; months: number; days: number }): string {
+  const parts: string[] = [`${duration.years}년`];
+  if (duration.months > 0) parts.push(`${duration.months}개월`);
+  parts.push(`${duration.days}일`);
+  return parts.join(' ');
+}
+
 export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [quitDate, setQuitDate] = useState<string>(() => formatYmd(new Date()));
   const [endDate, setEndDate] = useState<string>(() => {
@@ -30,6 +46,7 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const result = useMemo(() => {
     const quitDays = daysBetween(quitDate, endDate);
+    const quitYmd = splitDaysToYmd(quitDays);
     const safeCigsPerPack = Math.max(1, cigsPerPack);
 
     const avoidedCigs = Math.round(quitDays * cigsPerDay);
@@ -37,13 +54,16 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const moneySaved = Math.round(avoidedCigs * costPerCig);
 
     const lifeMinutesRecovered = avoidedCigs * 11;
-    const recoveredDays = Number((lifeMinutesRecovered / (60 * 24)).toFixed(1));
+    const recoveredDays = Math.round(lifeMinutesRecovered / (60 * 24));
+    const recoveredYmd = splitDaysToYmd(recoveredDays);
 
     return {
       quitDays,
+      quitYmd,
       avoidedCigs,
       moneySaved,
       recoveredDays,
+      recoveredYmd,
     };
   }, [cigsPerDay, cigsPerPack, endDate, packPrice, quitDate]);
 
@@ -54,10 +74,10 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       하루흡연량: `${cigsPerDay}개비`,
       담뱃값: formatKrw(packPrice),
       갑당개비수: `${cigsPerPack}개비`,
-      금연일수: `${result.quitDays}일`,
+      금연일수: `${formatNum(result.quitDays)}일 (${formatDurationKorean(result.quitYmd)})`,
       미흡연개비: `${formatNum(result.avoidedCigs)}개비`,
       절약금액: formatKrw(result.moneySaved),
-      기대수명회복: `${result.recoveredDays}일`,
+      기대수명회복: `${formatNum(result.recoveredDays)}일 (${formatDurationKorean(result.recoveredYmd)})`,
     });
 
     setSaved(true);
@@ -139,10 +159,10 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
       <div className="rounded-2xl p-4 border border-orange-200 dark:border-orange-900 bg-orange-50/70 dark:bg-orange-950/30 space-y-2">
         <div className="text-xs text-orange-700 dark:text-orange-300 font-semibold">금연 이득 결과</div>
-        <div className="text-sm text-orange-900 dark:text-orange-100">금연 일수: <strong>{formatNum(result.quitDays)}일</strong></div>
+        <div className="text-sm text-orange-900 dark:text-orange-100">금연 일수: <strong>{formatNum(result.quitDays)}일 ({formatDurationKorean(result.quitYmd)})</strong></div>
         <div className="text-sm text-orange-900 dark:text-orange-100">미흡연 개비: <strong>{formatNum(result.avoidedCigs)}개비</strong></div>
         <div className="text-3xl font-black text-orange-900 dark:text-orange-100">{formatKrw(result.moneySaved)}</div>
-        <div className="text-xs text-orange-800 dark:text-orange-200">기대수명 회복 추정: 약 {result.recoveredDays}일 (개비당 11분 기준)</div>
+        <div className="text-xs text-orange-800 dark:text-orange-200">기대수명 회복 추정: 약 {formatNum(result.recoveredDays)}일 ({formatDurationKorean(result.recoveredYmd)})</div>
       </div>
 
       {saved && (
