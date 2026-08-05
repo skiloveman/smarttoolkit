@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-800 dark:text-slate-100 flex items-center gap-2">
-                <span>생활 계산기</span>
+                <span>Smart ToolKit</span>
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900 uppercase tracking-wider">
                   도구 모음
                 </span>
