@@ -23,6 +23,7 @@ import {
   Clock,
   Car,
   Building2,
+  Sigma,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -82,6 +83,8 @@ export const Header: React.FC<HeaderProps> = ({
         return <Car className="w-4 h-4" />;
       case 'Building2':
         return <Building2 className="w-4 h-4" />;
+      case 'Sigma':
+        return <Sigma className="w-4 h-4" />;
       default:
         return <Calculator className="w-4 h-4" />;
     }

@@ -26,6 +26,7 @@ import { HourlyCalculator } from './components/calculators/HourlyCalculator';
 import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
+import { ScientificCalculator } from './components/calculators/ScientificCalculator';
 
 import { ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
 
@@ -128,6 +129,8 @@ export default function App() {
         return <RealEstateCalculator onSaveHistory={saveToHistory} />;
       case 'ladderGame':
         return <LadderGameCalculator onSaveHistory={saveToHistory} />;
+      case 'scientific':
+        return <ScientificCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }

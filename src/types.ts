@@ -16,7 +16,8 @@ export type CalculatorId =
   | 'hourly'
   | 'carTax'
   | 'realEstate'
-  | 'ladderGame';
+  | 'ladderGame'
+  | 'scientific';
 
 export interface CalculatorMeta {
   id: CalculatorId;

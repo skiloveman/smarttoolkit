@@ -20,6 +20,7 @@ import {
   Clock,
   Car,
   Building2,
+  Sigma,
 } from 'lucide-react';
 
 interface Props {
@@ -61,6 +62,8 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, sear
         return <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       case 'Building2':
         return <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
+      case 'Sigma':
+        return <Sigma className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
       default:
         return <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
     }
@@ -77,7 +80,7 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCalcId, onSelectCalc, sear
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-extrabold text-gray-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
           <Flame className="w-4 h-4 text-rose-500" />
-          <span>필수 생활 계산기 전체 바로가기</span>
+          <span>필수 Smart ToolKit 전체 바로가기</span>
         </h2>
         <span className="text-xs text-gray-400">총 {filtered.length}개 도구 제공</span>
       </div>

@@ -76,6 +76,15 @@ export const CALCULATOR_LIST: CalculatorMeta[] = [
     iconName: 'Percent',
   },
   {
+    id: 'scientific',
+    name: '공학용 계산기',
+    shortDesc: '삼각함수, 로그, 지수, 거듭제곱, 팩토리얼, 조합/순열 등 고급 수식을 한 화면에서 계산',
+    category: 'life',
+    iconName: 'Sigma',
+    badge: '고급 수식 지원',
+    popular: true,
+  },
+  {
     id: 'lotto',
     name: '로또 번호 자동 추출기',
     shortDesc: '실제 로또6/45 번호대별 공 색상 반영, 고정수/제외수 설정 및 최대 5게임 자동 번호 생성',
@@ -267,6 +276,28 @@ export const CALCULATOR_GUIDES: Record<string, GuideArticle> = {
       {
         question: '환전할 때 가장 유리한 시점은 언제인가요?',
         answer: '목표 환율을 설정하고 주중에 통화 변동폭을 확인하여 환전 우대 쿠폰(80~90%)이 적용되는 모바일뱅킹 사전 신청 후 공항/지점에서 수령하는 방법이 가장 경제적입니다.',
+      },
+    ],
+  },
+  scientific: {
+    title: '공학용 계산기 함수 가이드 (삼각함수·로그·지수·조합/순열)',
+    summary: '복잡한 수식을 직접 입력해 계산하는 공학용 계산기입니다. 괄호, 거듭제곱, 팩토리얼과 함께 sin/cos/tan, ln/log, 조합/순열 함수를 지원합니다.',
+    formulaText: '예시: sin(45)^2 + cos(45)^2 = 1 (DEG 기준) / nCr(n,r) = n! / (r!(n-r)!)',
+    keyPoints: [
+      '지원 연산자: +, -, *, /, ^, %, !, 괄호',
+      '지원 함수: sin, cos, tan, asin, acos, atan, ln, log, sqrt, cbrt, abs, exp, floor, ceil, round',
+      '2인자 함수: pow(a,b), max(a,b), min(a,b), mod(a,b), nCr(n,r), nPr(n,r)',
+      '각도 모드: DEG(도) / RAD(라디안) 토글 지원',
+      '상수 및 메모리: pi, e, ans(직전 계산 결과) 지원',
+    ],
+    faqs: [
+      {
+        question: '삼각함수 입력 시 DEG와 RAD 차이는 무엇인가요?',
+        answer: 'DEG는 각도를 도 단위로 계산하고 RAD는 라디안 단위로 계산합니다. 예를 들어 sin(90)은 DEG에서 1, RAD에서는 약 0.894가 됩니다.',
+      },
+      {
+        question: '조합/순열 함수 입력 규칙은 어떻게 되나요?',
+        answer: 'nCr(n,r), nPr(n,r) 모두 0 이상의 정수만 허용하며 r은 n보다 클 수 없습니다.',
       },
     ],
   },
