@@ -77,7 +77,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
                   onClick={() => onOpenModal('contact')}
                   className="font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors"
                 >
-                  1:1 문의/제보
+                  1:1문의 및 제보
                 </button>
               </li>
             </ul>
