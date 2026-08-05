@@ -25,6 +25,14 @@ const BOTTOM_PADDING = 28;
 const ANIMATION_DURATION_MS = 5600;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const getHorizontalPadding = (laneCount: number) => {
+  const basePadding = 34 - (laneCount - 4) * 2.8;
+  if (laneCount >= 8) {
+    const extraTightening = (laneCount - 7) * 1.4;
+    return clamp(basePadding - extraTightening, 7, 34);
+  }
+  return clamp(basePadding, 12, 34);
+};
 
 const createDefaultNames = (count: number) =>
   Array.from({ length: count }, (_, i) => `참가자 ${i + 1}`);
@@ -169,11 +177,12 @@ const buildPath = (startLane: number, rows: boolean[][]): { laneIndex: number; p
   return { laneIndex: lane, path };
 };
 
-const laneToX = (lane: number, laneCount: number) => {
+const laneToX = (lane: number, laneCount: number, horizontalPadding: number) => {
+  const usableWidth = LADDER_WIDTH - horizontalPadding * 2;
   if (laneCount === 1) {
-    return LADDER_WIDTH / 2;
+    return horizontalPadding + usableWidth / 2;
   }
-  return (lane / (laneCount - 1)) * LADDER_WIDTH;
+  return horizontalPadding + (lane / (laneCount - 1)) * usableWidth;
 };
 
 const rowToY = (row: number, rowCount: number) => {
@@ -181,8 +190,13 @@ const rowToY = (row: number, rowCount: number) => {
   return TOP_PADDING + (row / rowCount) * usableHeight;
 };
 
-const toSvgPoint = (point: Point, laneCount: number, rowCount: number): Point => ({
-  x: laneToX(point.x, laneCount),
+const toSvgPoint = (
+  point: Point,
+  laneCount: number,
+  rowCount: number,
+  horizontalPadding: number
+): Point => ({
+  x: laneToX(point.x, laneCount, horizontalPadding),
   y: rowToY(point.y, rowCount),
 });
 
@@ -435,7 +449,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       for (let lane = 0; lane < laneCount; lane++) {
         const { laneIndex, path } = buildPath(lane, rows);
         finalLaneByStart.push(laneIndex);
-        paths.push(path.map((p) => toSvgPoint(p, laneCount, rowCount)));
+        paths.push(path.map((p) => toSvgPoint(p, laneCount, rowCount, horizontalPadding)));
       }
 
       const movedCount = finalLaneByStart.filter((finalLane, startLane) => finalLane !== startLane).length;
@@ -499,6 +513,15 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const activeRows = runData?.rows ?? previewRows;
   const activeRowCount = runData?.rowCount ?? previewRowCount;
+  const horizontalPadding = useMemo(() => getHorizontalPadding(laneCount), [laneCount]);
+  const laneLeftPercents = useMemo(
+    () =>
+      Array.from(
+        { length: laneCount },
+        (_, lane) => (laneToX(lane, laneCount, horizontalPadding) / LADDER_WIDTH) * 100
+      ),
+    [laneCount, horizontalPadding]
+  );
 
   const allRevealed = runData ? revealedStartLanes.slice(0, laneCount).every(Boolean) : false;
 
@@ -681,14 +704,14 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-auto">
-          <div style={{ minWidth: `${Math.max(520, laneCount * 120)}px` }}>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
+          <div className="w-full">
             <svg
               viewBox={`0 0 ${LADDER_WIDTH} ${LADDER_HEIGHT}`}
-              className="w-full h-[420px] rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+              className="w-full h-[400px] rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
             >
               {Array.from({ length: laneCount }, (_, lane) => {
-                const x = laneToX(lane, laneCount);
+                const x = laneToX(lane, laneCount, horizontalPadding);
                 return (
                   <line
                     key={`vertical-${lane}`}
@@ -709,8 +732,8 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   }
 
                   const y = rowToY(rowIdx + 0.5, activeRowCount);
-                  const x1 = laneToX(laneIdx, laneCount);
-                  const x2 = laneToX(laneIdx + 1, laneCount);
+                  const x1 = laneToX(laneIdx, laneCount, horizontalPadding);
+                  const x2 = laneToX(laneIdx + 1, laneCount, horizontalPadding);
 
                   return (
                     <line
@@ -784,19 +807,24 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               ))}
             </svg>
 
-            <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: `repeat(${laneCount}, minmax(0, 1fr))` }}>
+            <div className="relative mt-3 h-5 overflow-hidden">
               {Array.from({ length: laneCount }, (_, i) => (
-                <div key={`name-tag-${i}`} className="text-center text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                <div
+                  key={`name-tag-${i}`}
+                  className="absolute -translate-x-1/2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 truncate"
+                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
+                >
                   {bottomParticipantNames[i]}
                 </div>
               ))}
             </div>
 
-            <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: `repeat(${laneCount}, minmax(0, 1fr))` }}>
+            <div className="relative mt-2 h-8 overflow-hidden">
               {Array.from({ length: laneCount }, (_, i) => (
                 <div
                   key={`result-tag-${i}`}
-                  className="text-center text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-2 py-1 truncate"
+                  className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
+                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(460 / laneCount))}px` }}
                 >
                   {results[i]}
                 </div>
