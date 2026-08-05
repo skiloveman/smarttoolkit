@@ -93,7 +93,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               onClick={() => onOpenModal('contact')}
               className="px-3 py-1.5 rounded-full bg-rose-600 text-white text-[10px] font-bold tracking-wide hover:bg-rose-700 transition-colors"
             >
-              1:1 문의/제보
+              1:1문의 및 제보
             </button>
             <div className="text-[10px] normal-case tracking-normal">
               본 사이트의 산출 결과는 모의 산출 참고용이며, 정확한 적용은 관련 정식 기관에 문의하세요.

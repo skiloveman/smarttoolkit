@@ -284,11 +284,11 @@ export default function App() {
       <button
         onClick={() => setLegalModalType('contact')}
         className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-900/30 hover:bg-rose-700 transition-colors"
-        aria-label="1:1 문의 및 제보하기 열기"
-        title="1:1 문의 및 제보하기"
+        aria-label="1:1문의 및 제보하기 열기"
+        title="1:1문의 및 제보하기"
       >
         <MessageSquareWarning className="w-4 h-4" />
-        <span>1:1 문의/제보</span>
+        <span>1:1문의 및 제보</span>
       </button>
 
       {/* Legal & Terms Modals */}
