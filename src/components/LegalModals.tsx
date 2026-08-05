@@ -14,6 +14,22 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
   const [details, setDetails] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [submitPopup, setSubmitPopup] = useState<{ ok: boolean; message: string } | null>(null);
+
+  const getSuccessMessageByInquiryType = (inquiryTypeValue: string) => {
+    switch (inquiryTypeValue) {
+      case '오류 제보':
+        return '오류 제보가 접수되었습니다. 재현 확인 후 수정이 필요한 경우 빠르게 반영하겠습니다.';
+      case '기능 제안':
+        return '기능 제안이 접수되었습니다. 내부 검토 후 업데이트 계획에 반영하겠습니다.';
+      case '이용 문의':
+        return '이용 문의가 접수되었습니다. 확인 후 남겨주신 이메일로 답변드리겠습니다.';
+      case '제휴 문의':
+        return '제휴 문의가 접수되었습니다. 담당자가 확인 후 회신드리겠습니다.';
+      default:
+        return '문의가 정상 접수되었습니다. 빠르게 확인 후 답변드리겠습니다.';
+    }
+  };
 
   useEffect(() => {
     if (!isOpen || type !== 'contact') {
@@ -23,6 +39,7 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
       setDetails('');
       setIsSubmitting(false);
       setSubmitResult(null);
+      setSubmitPopup(null);
     }
   }, [isOpen, type]);
 
@@ -61,16 +78,20 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
         throw new Error(payload?.message || '문의 접수에 실패했습니다.');
       }
 
-      setSubmitResult({ ok: true, message: '문의가 정상 접수되었습니다. 빠르게 확인 후 답변드리겠습니다.' });
+      const successMessage = getSuccessMessageByInquiryType(inquiryType);
+      setSubmitResult({ ok: true, message: successMessage });
+      setSubmitPopup({ ok: true, message: successMessage });
       setNameOrNickname('');
       setReplyEmail('');
       setInquiryType('오류 제보');
       setDetails('');
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '문의 전송 중 오류가 발생했습니다.';
       setSubmitResult({
         ok: false,
-        message: err instanceof Error ? err.message : '문의 전송 중 오류가 발생했습니다.',
+        message: errorMessage,
       });
+      setSubmitPopup({ ok: false, message: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
@@ -238,36 +259,68 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
 
   const current = getContent();
 
+  const handleSubmitPopupConfirm = () => {
+    const wasSuccess = submitPopup?.ok;
+    setSubmitPopup(null);
+
+    if (wasSuccess) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
-            {current.icon}
-            <span>{current.title}</span>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
+              {current.icon}
+              <span>{current.title}</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* Modal Body */}
-        <div className="p-6 max-h-[70vh] overflow-y-auto">{current.body}</div>
+          {/* Modal Body */}
+          <div className="p-6 max-h-[70vh] overflow-y-auto">{current.body}</div>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
-          >
-            확인
-          </button>
+          {/* Modal Footer */}
+          <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
+            >
+              확인
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {submitPopup && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5">
+            <p className={`text-sm font-bold ${submitPopup.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+              {submitPopup.ok ? '문의 접수 완료' : '문의 접수 실패'}
+            </p>
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              {submitPopup.message}
+            </p>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleSubmitPopupConfirm}
+                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold hover:bg-slate-800 transition-colors"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };

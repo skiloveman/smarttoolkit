@@ -36,7 +36,7 @@ import { RealEstateCalculator } from './components/calculators/RealEstateCalcula
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
 import { ScientificCalculator } from './components/calculators/ScientificCalculator';
 
-import { ShieldCheck, CheckCircle, Calculator } from 'lucide-react';
+import { ShieldCheck, CheckCircle, MessageSquareWarning } from 'lucide-react';
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
@@ -248,6 +248,12 @@ export default function App() {
               >
                 계산기 바로 시작
               </button>
+              <button
+                onClick={() => setLegalModalType('contact')}
+                className="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs"
+              >
+                1:1 문의/제보 바로가기
+              </button>
             </div>
           </div>
 
@@ -279,6 +285,17 @@ export default function App() {
 
       {/* Footer & Compliance Section */}
       <Footer onOpenModal={(type) => setLegalModalType(type)} />
+
+      {/* Floating contact/report CTA */}
+      <button
+        onClick={() => setLegalModalType('contact')}
+        className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-rose-600 px-4 py-3 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-900/30 hover:bg-rose-700 transition-colors"
+        aria-label="1:1 문의 및 제보하기 열기"
+        title="1:1 문의 및 제보하기"
+      >
+        <MessageSquareWarning className="w-4 h-4" />
+        <span>1:1 문의/제보</span>
+      </button>
 
       {/* Legal & Terms Modals */}
       <LegalModals
