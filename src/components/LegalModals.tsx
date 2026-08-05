@@ -20,7 +20,7 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
             <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
                 <strong>제 1 조 (목적)</strong><br />
-                본 약관은 "생활 계산기, 필요한 도구들"(이하 "서비스")이 제공하는 인터넷 모의 계산 및 정보 서비스의 이용 조건 및 절차를 규정함을 목적으로 합니다.
+                본 약관은 "Smart ToolKit, 필요한 도구들"(이하 "서비스")이 제공하는 인터넷 모의 계산 및 정보 서비스의 이용 조건 및 절차를 규정함을 목적으로 합니다.
               </p>
               <p>
                 <strong>제 2 조 (서비스의 내용)</strong><br />
@@ -63,7 +63,7 @@ export const LegalModals: React.FC<ModalProps> = ({ isOpen, onClose, type }) => 
           body: (
             <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               <p>
-                "생활 계산기"에서 산출되는 모든 계산 결과 및 가이드 정보는 참고요 자료로만 사용되어야 합니다.
+                "Smart ToolKit"에서 산출되는 모든 계산 결과 및 가이드 정보는 참고요 자료로만 사용되어야 합니다.
               </p>
               <p>
                 본 사이트의 산출 로직은 국세청, 근로복지공단, 한국전력공사, 대한비만학회 및 금융권의 공시 요율을 준수하여 작성되었으나, 개별 법령 개정 및 사규에 따라 실제와 차이가 발생할 수 있습니다.

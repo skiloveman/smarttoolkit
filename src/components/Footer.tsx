@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
                 <Calculator className="w-4 h-4" />
               </div>
               <span className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
-                생활 계산기, 필요한 도구들
+                Smart ToolKit, 필요한 도구들
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-slate-400 leading-relaxed max-w-sm">
@@ -86,7 +86,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
 
         <div className="pt-6 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-gray-400 dark:text-slate-500 uppercase tracking-widest">
           <div>
-            © 2026 생활 계산기. ALL RIGHTS RESERVED.
+            © 2026 Smart ToolKit. ALL RIGHTS RESERVED.
           </div>
           <div className="text-[10px] normal-case tracking-normal">
             본 사이트의 산출 결과는 모의 산출 참고용이며, 정확한 적용은 관련 정식 기관에 문의하세요.
