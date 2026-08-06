@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, RefreshCw, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -287,6 +290,7 @@ const getPartialPolyline = (points: Point[], progress: number): Point[] => {
 };
 
 export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [laneCount, setLaneCount] = useState<number>(4);
   const [laneCountInput, setLaneCountInput] = useState<string>('4');
   const [names, setNames] = useState<string[]>(createDefaultNames(4));
@@ -310,6 +314,29 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const previewRowCount = useMemo(() => getRowCount(laneCount), [laneCount]);
   const previewRows = useMemo(() => createRows(laneCount, previewRowCount), [laneCount, previewRowCount]);
+
+  usePendingHistoryRestore<{
+    laneCount: number;
+    laneCountInput: string;
+    names: string[];
+    results: string[];
+  }>('ladderGame', (restored) => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    setLaneCount(restored.laneCount);
+    setLaneCountInput(restored.laneCountInput);
+    setNames(syncLength(restored.names, restored.laneCount, '참가자'));
+    setResults(syncLength(restored.results, restored.laneCount, '결과'));
+    setProgressByLane([]);
+    setRevealedStartLanes([]);
+    setActiveStartLane(null);
+    setRunData(null);
+    setIsAnimating(false);
+    setSaved(false);
+  });
 
   const ensureLength = (count: number) => {
     setNames((prev) => syncLength(prev, count, '참가자'));
@@ -508,6 +535,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     }
 
     setLaneCount(4);
+    setLaneCountInput('4');
     setNames(createDefaultNames(4));
     setResults(createDefaultResults(4));
     setProgressByLane([]);
@@ -531,7 +559,12 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       detailObj[who] = what;
     });
 
-    onSaveHistory('사다리게임', `${runData.laneCount}인 사다리 결과 저장`, detailObj);
+    saveHistory('사다리게임', `${runData.laneCount}인 사다리 결과 저장`, detailObj, {
+      laneCount,
+      laneCountInput,
+      names: names.slice(0, laneCount),
+      results: results.slice(0, laneCount),
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
   };
@@ -615,12 +648,13 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
               사다리 수
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               min={2}
               max={12}
               value={laneCountInput}
-              onChange={(e) => handleLaneCountInputChange(e.target.value)}
+              defaultValueLabel={4}
+              onValueChange={handleLaneCountInputChange}
               onBlur={handleLaneCountInputBlur}
               className="w-24 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 px-3 py-2 text-sm font-bold text-slate-800 dark:text-slate-200"
             />

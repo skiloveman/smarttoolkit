@@ -1,14 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { calculateSalary, formatKrw, formatNum } from '../../utils/calculators';
-import { SalaryInput } from '../../types';
+import { SalaryInput, SaveHistoryFn } from '../../types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Copy, Check, Info, Sparkles, RefreshCw, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [salaryType, setSalaryType] = useState<'annual' | 'monthly'>('annual');
   const [amountInput, setAmountInput] = useState<number>(45000000); // 45,000,000 KRW default
   const [nonTaxable, setNonTaxable] = useState<number>(200000); // 200,000 KRW
@@ -29,6 +32,20 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   );
 
   const result = useMemo(() => calculateSalary(salaryInput), [salaryInput]);
+
+  usePendingHistoryRestore<{
+    salaryType: 'annual' | 'monthly';
+    amountInput: number;
+    nonTaxable: number;
+    dependents: number;
+    childrenUnder20: number;
+  }>('salary', (restored) => {
+    setSalaryType(restored.salaryType);
+    setAmountInput(restored.amountInput);
+    setNonTaxable(restored.nonTaxable);
+    setDependents(restored.dependents);
+    setChildrenUnder20(restored.childrenUnder20);
+  });
 
   // Chart Data
   const chartData = [
@@ -56,7 +73,7 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '연봉 실수령액 계산',
       `실수령액: ${formatKrw(result.netMonthlyPay)} / 공제: ${formatKrw(result.totalDeduction)}`,
       {
@@ -64,6 +81,13 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         '월 실수령액': formatKrw(result.netMonthlyPay),
         '4대보험 합계': formatKrw(result.totalSocialInsurance),
         '세금 합계': formatKrw(result.totalTax),
+      },
+      {
+        salaryType,
+        amountInput,
+        nonTaxable,
+        dependents,
+        childrenUnder20,
       }
     );
     setSaved(true);
@@ -119,11 +143,12 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {salaryType === 'annual' ? '연봉 금액 (세전)' : '월급 금액 (세전)'}
             </label>
             <div className="relative">
-              <input
+              <DefaultValueInput
                 type="number"
                 step={salaryType === 'annual' ? 1000000 : 100000}
                 value={amountInput}
-                onChange={(e) => setAmountInput(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={salaryType === 'annual' ? 45000000 : 3500000}
+                onValueChange={(value) => setAmountInput(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-base font-bold text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all pr-12"
               />
               <span className="absolute right-4 top-3.5 text-xs font-semibold text-slate-400">원</span>

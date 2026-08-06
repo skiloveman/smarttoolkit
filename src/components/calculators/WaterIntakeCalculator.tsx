@@ -1,12 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Droplets, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const WaterIntakeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [weightKg, setWeightKg] = useState(70);
   const [exerciseMinutes, setExerciseMinutes] = useState(30);
   const [climate, setClimate] = useState<'normal' | 'hot'>('normal');
@@ -24,12 +28,26 @@ export const WaterIntakeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [climate, exerciseMinutes, weightKg]);
 
+  usePendingHistoryRestore<{
+    weightKg: number;
+    exerciseMinutes: number;
+    climate: 'normal' | 'hot';
+  }>('waterIntake', (restored) => {
+    setWeightKg(restored.weightKg);
+    setExerciseMinutes(restored.exerciseMinutes);
+    setClimate(restored.climate);
+  });
+
   const handleSave = () => {
-    onSaveHistory('수분 섭취량 계산기', `하루 권장 ${liters}L`, {
+    saveHistory('수분 섭취량 계산기', `하루 권장 ${liters}L`, {
       체중: `${weightKg}kg`,
       운동시간: `${exerciseMinutes}분`,
       기후: climate === 'hot' ? '더운 환경' : '일반 환경',
       권장섭취량: `${formatNum(totalMl)}ml (${liters}L)`,
+    }, {
+      weightKg,
+      exerciseMinutes,
+      climate,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -50,12 +68,12 @@ export const WaterIntakeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (kg)</label>
-          <input type="number" value={weightKg} onChange={(e) => setWeightKg(Number(e.target.value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={weightKg} defaultValueLabel={70} onValueChange={(value) => setWeightKg(Number(value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 운동 시간 (분)</label>
-          <input type="number" value={exerciseMinutes} onChange={(e) => setExerciseMinutes(Number(e.target.value) || 0)} onBlur={() => setExerciseMinutes((prev) => Math.max(0, Math.min(600, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={exerciseMinutes} defaultValueLabel={30} onValueChange={(value) => setExerciseMinutes(Number(value) || 0)} onBlur={() => setExerciseMinutes((prev) => Math.max(0, Math.min(600, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
       </div>
 

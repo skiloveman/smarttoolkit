@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Flame, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum, formatYmd } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -33,6 +36,7 @@ function formatDurationKorean(duration: { years: number; months: number; days: n
 }
 
 export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [quitDate, setQuitDate] = useState<string>(() => formatYmd(new Date()));
   const [endDate, setEndDate] = useState<string>(() => {
     const d = new Date();
@@ -67,8 +71,22 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [cigsPerDay, cigsPerPack, endDate, packPrice, quitDate]);
 
+  usePendingHistoryRestore<{
+    quitDate: string;
+    endDate: string;
+    cigsPerDay: number;
+    packPrice: number;
+    cigsPerPack: number;
+  }>('smokingQuit', (restored) => {
+    setQuitDate(restored.quitDate);
+    setEndDate(restored.endDate);
+    setCigsPerDay(restored.cigsPerDay);
+    setPackPrice(restored.packPrice);
+    setCigsPerPack(restored.cigsPerPack);
+  });
+
   const handleSave = () => {
-    onSaveHistory('금연 이득 계산기', `${result.quitDays}일 금연 / ${formatKrw(result.moneySaved)} 절약`, {
+    saveHistory('금연 이득 계산기', `${result.quitDays}일 금연 / ${formatKrw(result.moneySaved)} 절약`, {
       금연시작일: quitDate,
       금연종료일: endDate,
       하루흡연량: `${cigsPerDay}개비`,
@@ -78,6 +96,12 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       미흡연개비: `${formatNum(result.avoidedCigs)}개비`,
       절약금액: formatKrw(result.moneySaved),
       기대수명회복: `${formatNum(result.recoveredDays)}일 (${formatDurationKorean(result.recoveredYmd)})`,
+    }, {
+      quitDate,
+      endDate,
+      cigsPerDay,
+      packPrice,
+      cigsPerPack,
     });
 
     setSaved(true);
@@ -103,10 +127,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">금연 시작일</label>
-          <input
+          <DefaultValueInput
             type="date"
             value={quitDate}
-            onChange={(e) => setQuitDate(e.target.value)}
+            defaultValueLabel={formatYmd(new Date())}
+            onValueChange={setQuitDate}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100"
           />
           <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {quitDate}</div>
@@ -114,10 +139,15 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">금연 종료일 (계산 기준일)</label>
-          <input
+          <DefaultValueInput
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            defaultValueLabel={(() => {
+              const d = new Date();
+              d.setFullYear(d.getFullYear() + 20);
+              return formatYmd(d);
+            })()}
+            onValueChange={setEndDate}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100"
           />
           <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {endDate}</div>
@@ -125,10 +155,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 흡연량 (개비)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={cigsPerDay}
-            onChange={(e) => setCigsPerDay(Number(e.target.value) || 0)}
+            defaultValueLabel={20}
+            onValueChange={(value) => setCigsPerDay(Number(value) || 0)}
             onBlur={() => setCigsPerDay((prev) => Math.max(0, Math.min(100, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -136,10 +167,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">담배 1갑 가격 (원)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={packPrice}
-            onChange={(e) => setPackPrice(Number(e.target.value) || 0)}
+            defaultValueLabel={4500}
+            onValueChange={(value) => setPackPrice(Number(value) || 0)}
             onBlur={() => setPackPrice((prev) => Math.max(0, Math.min(50000, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -147,10 +179,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">1갑당 개비 수</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={cigsPerPack}
-            onChange={(e) => setCigsPerPack(Number(e.target.value) || 0)}
+            defaultValueLabel={20}
+            onValueChange={(value) => setCigsPerPack(Number(value) || 0)}
             onBlur={() => setCigsPerPack((prev) => Math.max(1, Math.min(40, prev || 1)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />

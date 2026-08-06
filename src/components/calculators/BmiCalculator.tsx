@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { calculateBmi, formatNum } from '../../utils/calculators';
-import { BmiInput } from '../../types';
+import { BmiInput, SaveHistoryFn } from '../../types';
 import { Activity, Copy, Check, Heart, Scale, Flame, BookmarkPlus } from 'lucide-react';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState<number>(30);
   const [heightCm, setHeightCm] = useState<number>(175);
@@ -27,6 +29,18 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const result = useMemo(() => calculateBmi(bmiInput), [bmiInput]);
 
+  usePendingHistoryRestore<{
+    gender: 'male' | 'female';
+    age: number;
+    heightCm: number;
+    weightKg: number;
+  }>('bmi', (restored) => {
+    setGender(restored.gender);
+    setAge(restored.age);
+    setHeightCm(restored.heightCm);
+    setWeightKg(restored.weightKg);
+  });
+
   const handleCopy = () => {
     const text = `[BMI 체질량지수 측정 결과]
 • 신장/체중: ${heightCm}cm / ${weightKg}kg (${gender === 'male' ? '남성' : '여성'}, ${age}세)
@@ -41,7 +55,7 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       'BMI 계산 결과',
       `BMI: ${result.bmi} (${result.status}) / 신장: ${heightCm}cm, 체중: ${weightKg}kg`,
       {
@@ -49,7 +63,8 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         'BMI 지수': `${result.bmi}`,
         '비만도 판정': result.status,
         '정상 체중 범위': `${result.idealWeightMin}kg ~ ${result.idealWeightMax}kg`,
-      }
+      },
+      { gender, age, heightCm, weightKg }
     );
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

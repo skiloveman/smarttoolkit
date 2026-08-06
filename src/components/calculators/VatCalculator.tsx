@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { calculateVat, formatKrw, formatNum } from '../../utils/calculators';
-import { VatInput } from '../../types';
+import { VatInput, SaveHistoryFn } from '../../types';
 import { Receipt, Copy, Check, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [mode, setMode] = useState<'fromSupply' | 'fromTotal'>('fromSupply');
   const [amount, setAmount] = useState<number>(1000000); // 1,000,000 KRW default
   const [vatRate, setVatRate] = useState<number>(10);
@@ -25,6 +28,16 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const result = useMemo(() => calculateVat(vatInput), [vatInput]);
 
+  usePendingHistoryRestore<{
+    mode: 'fromSupply' | 'fromTotal';
+    amount: number;
+    vatRate: number;
+  }>('vat', (restored) => {
+    setMode(restored.mode);
+    setAmount(restored.amount);
+    setVatRate(restored.vatRate);
+  });
+
   const copyToClipboard = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
@@ -32,7 +45,7 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '부가세 계산 결과',
       `공급가액: ${formatKrw(result.supplyValue)} / 부가세: ${formatKrw(result.vatAmount)} / 합계: ${formatKrw(result.totalAmount)}`,
       {
@@ -40,7 +53,8 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         공급가액: formatKrw(result.supplyValue),
         '부가가치세 (10%)': formatKrw(result.vatAmount),
         합계금액: formatKrw(result.totalAmount),
-      }
+      },
+      { mode, amount, vatRate }
     );
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -87,11 +101,12 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {mode === 'fromSupply' ? '공급가액 (세전 금액)' : '합계금액 (세금 포함 총액)'}
             </label>
             <div className="relative">
-              <input
+              <DefaultValueInput
                 type="number"
                 step="10000"
                 value={amount}
-                onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={1000000}
+                onValueChange={(value) => setAmount(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-lg font-black text-slate-900 dark:text-slate-100 focus:outline-none pr-12"
               />
               <span className="absolute right-4 top-4 text-xs font-semibold text-slate-400">원</span>
@@ -119,10 +134,11 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               부가가치세율 (%)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={vatRate}
-              onChange={(e) => setVatRate(Number(e.target.value))}
+              defaultValueLabel={10}
+              onValueChange={(value) => setVatRate(Number(value) || 0)}
               className="w-24 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
             />
           </div>

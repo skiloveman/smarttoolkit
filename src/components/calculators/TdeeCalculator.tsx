@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Zap, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -17,6 +20,7 @@ const activityOptions = [
 type ActivityId = (typeof activityOptions)[number]['id'];
 
 export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState(30);
   const [heightCm, setHeightCm] = useState(175);
@@ -38,8 +42,22 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [activity, age, gender, heightCm, weightKg]);
 
+  usePendingHistoryRestore<{
+    gender: 'male' | 'female';
+    age: number;
+    heightCm: number;
+    weightKg: number;
+    activity: ActivityId;
+  }>('tdee', (restored) => {
+    setGender(restored.gender);
+    setAge(restored.age);
+    setHeightCm(restored.heightCm);
+    setWeightKg(restored.weightKg);
+    setActivity(restored.activity);
+  });
+
   const handleSave = () => {
-    onSaveHistory('TDEE 계산기', `일일 총 에너지 소비량 ${formatNum(tdee)} kcal`, {
+    saveHistory('TDEE 계산기', `일일 총 에너지 소비량 ${formatNum(tdee)} kcal`, {
       성별: gender === 'male' ? '남성' : '여성',
       나이: `${age}세`,
       신장: `${heightCm}cm`,
@@ -47,6 +65,12 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       활동계수: multiplier,
       BMR: `${formatNum(bmr)} kcal`,
       TDEE: `${formatNum(tdee)} kcal`,
+    }, {
+      gender,
+      age,
+      heightCm,
+      weightKg,
+      activity,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -75,17 +99,17 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">나이</label>
-          <input type="number" value={age} onChange={(e) => setAge(Number(e.target.value) || 0)} onBlur={() => setAge((prev) => Math.max(10, Math.min(100, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={age} defaultValueLabel={30} onValueChange={(value) => setAge(Number(value) || 0)} onBlur={() => setAge((prev) => Math.max(10, Math.min(100, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (cm)</label>
-          <input type="number" value={heightCm} onChange={(e) => setHeightCm(Number(e.target.value) || 0)} onBlur={() => setHeightCm((prev) => Math.max(100, Math.min(230, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={heightCm} defaultValueLabel={175} onValueChange={(value) => setHeightCm(Number(value) || 0)} onBlur={() => setHeightCm((prev) => Math.max(100, Math.min(230, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (kg)</label>
-          <input type="number" value={weightKg} onChange={(e) => setWeightKg(Number(e.target.value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={weightKg} defaultValueLabel={70} onValueChange={(value) => setWeightKg(Number(value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
       </div>
 

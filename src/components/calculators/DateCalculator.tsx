@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Calendar, Copy, Check, Clock, Plus, Minus, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatYmd } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const todayStr = formatYmd(new Date());
 
   // Tab 1: D-day
@@ -18,6 +22,16 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  usePendingHistoryRestore<{
+    targetDate: string;
+    baseDate: string;
+    addDays: number;
+  }>('date', (restored) => {
+    setTargetDate(restored.targetDate);
+    setBaseDate(restored.baseDate);
+    setAddDays(restored.addDays);
+  });
 
   // D-day calculation
   const calcDday = () => {
@@ -53,11 +67,15 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory('D-Day & 날짜 계산', `D-Day: D${ddayResult >= 0 ? '-' : '+'}${Math.abs(ddayResult)} / ${addDays}일 후: ${addedDateResult}`, {
+    saveHistory('D-Day & 날짜 계산', `D-Day: D${ddayResult >= 0 ? '-' : '+'}${Math.abs(ddayResult)} / ${addDays}일 후: ${addedDateResult}`, {
       '목표 날짜': targetDate,
       'D-Day 수치': ddayResult,
       '기준일자': baseDate,
       '계산일자': `${addDays}일 후 (${addedDateResult})`,
+    }, {
+      targetDate,
+      baseDate,
+      addDays,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -79,10 +97,11 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             목표 일자 선택
           </label>
-          <input
+          <DefaultValueInput
             type="date"
             value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
+            defaultValueLabel={todayStr}
+            onValueChange={setTargetDate}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3 text-xs font-bold text-slate-800 dark:text-slate-200"
           />
           <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {targetDate}</div>
@@ -118,10 +137,11 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               기준 일자
             </label>
-            <input
+            <DefaultValueInput
               type="date"
               value={baseDate}
-              onChange={(e) => setBaseDate(e.target.value)}
+              defaultValueLabel={todayStr}
+              onValueChange={setBaseDate}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
             <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {baseDate}</div>
@@ -131,10 +151,11 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               더할 일수 (일)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={addDays}
-              onChange={(e) => setAddDays(Number(e.target.value))}
+              defaultValueLabel={100}
+              onValueChange={(value) => setAddDays(Number(value) || 0)}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

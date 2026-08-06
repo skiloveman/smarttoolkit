@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { calculateSeverance, formatKrw, formatYmd } from '../../utils/calculators';
-import { SeveranceInput } from '../../types';
+import { SeveranceInput, SaveHistoryFn } from '../../types';
 import { Coins, Copy, Check, Calendar, AlertCircle, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   // Default dates: 3 years ago to today
   const todayStr = formatYmd(new Date());
   const threeYearsAgo = new Date();
@@ -39,6 +42,24 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const result = useMemo(() => calculateSeverance(severanceInput), [severanceInput]);
 
+  usePendingHistoryRestore<{
+    joinDate: string;
+    retireDate: string;
+    m1: number;
+    m2: number;
+    m3: number;
+    annualBonus: number;
+    annualLeavePay: number;
+  }>('severance', (restored) => {
+    setJoinDate(restored.joinDate);
+    setRetireDate(restored.retireDate);
+    setM1(restored.m1);
+    setM2(restored.m2);
+    setM3(restored.m3);
+    setAnnualBonus(restored.annualBonus);
+    setAnnualLeavePay(restored.annualLeavePay);
+  });
+
   const handleCopy = () => {
     const text = `[퇴직금 예상 계산 결과]
 • 재직기간: ${joinDate} ~ ${retireDate} (총 ${result.totalWorkDays}일, 약 ${result.yearsOfService}년)
@@ -55,7 +76,7 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '퇴직금 예상 계산',
       `예상 퇴직금: ${formatKrw(result.estimatedSeverance)} (재직 ${result.totalWorkDays}일)`,
       {
@@ -63,6 +84,15 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         '총 재직일수': `${result.totalWorkDays}일 (${result.yearsOfService}년)`,
         '1일 평균임금': formatKrw(result.averageDailyWage),
         '예상 퇴직금': formatKrw(result.estimatedSeverance),
+      },
+      {
+        joinDate,
+        retireDate,
+        m1,
+        m2,
+        m3,
+        annualBonus,
+        annualLeavePay,
       }
     );
     setSaved(true);
@@ -89,10 +119,11 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <Calendar className="w-3.5 h-3.5 text-blue-500" />
                 <span>입사일자</span>
               </label>
-              <input
+              <DefaultValueInput
                 type="date"
                 value={joinDate}
-                onChange={(e) => setJoinDate(e.target.value)}
+                defaultValueLabel={startStr}
+                onValueChange={setJoinDate}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
               <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {joinDate}</div>
@@ -103,10 +134,11 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <Calendar className="w-3.5 h-3.5 text-amber-500" />
                 <span>퇴직일자 (마지막 근무 다음날)</span>
               </label>
-              <input
+              <DefaultValueInput
                 type="date"
                 value={retireDate}
-                onChange={(e) => setRetireDate(e.target.value)}
+                defaultValueLabel={todayStr}
+                onValueChange={setRetireDate}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
               <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">표시값: {retireDate}</div>
@@ -121,31 +153,34 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <span className="text-[10px] text-slate-400 block mb-1">1개월 전</span>
-                <input
+                <DefaultValueInput
                   type="number"
                   step="100000"
                   value={m1}
-                  onChange={(e) => setM1(Number(e.target.value))}
+                  defaultValueLabel={3500000}
+                  onValueChange={(value) => setM1(Number(value) || 0)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 block mb-1">2개월 전</span>
-                <input
+                <DefaultValueInput
                   type="number"
                   step="100000"
                   value={m2}
-                  onChange={(e) => setM2(Number(e.target.value))}
+                  defaultValueLabel={3500000}
+                  onValueChange={(value) => setM2(Number(value) || 0)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 block mb-1">3개월 전</span>
-                <input
+                <DefaultValueInput
                   type="number"
                   step="100000"
                   value={m3}
-                  onChange={(e) => setM3(Number(e.target.value))}
+                  defaultValueLabel={3500000}
+                  onValueChange={(value) => setM3(Number(value) || 0)}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
@@ -158,11 +193,12 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 연간 상여금 총액 (퇴직 전 1년)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="100000"
                 value={annualBonus}
-                onChange={(e) => setAnnualBonus(Number(e.target.value))}
+                defaultValueLabel={3000000}
+                onValueChange={(value) => setAnnualBonus(Number(value) || 0)}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
             </div>
@@ -171,11 +207,12 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 연차유급휴가 미사용수당 총액
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="50000"
                 value={annualLeavePay}
-                onChange={(e) => setAnnualLeavePay(Number(e.target.value))}
+                defaultValueLabel={500000}
+                onValueChange={(value) => setAnnualLeavePay(Number(value) || 0)}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
             </div>

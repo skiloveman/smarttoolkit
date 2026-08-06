@@ -43,7 +43,19 @@ export interface CalculationHistoryItem {
   timestamp: number;
   summary: string;
   details: Record<string, string | number>;
+  inputState?: CalculationInputState;
 }
+
+export type CalculationInputValue = string | number | boolean | string[] | number[] | number[][] | null;
+
+export type CalculationInputState = Record<string, CalculationInputValue>;
+
+export type SaveHistoryFn = (
+  title: string,
+  summary: string,
+  details: Record<string, string | number>,
+  inputState?: CalculationInputState
+) => void;
 
 export interface CurrencyRate {
   code: string;

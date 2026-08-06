@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Percent, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -15,6 +18,7 @@ const macroPlans = {
 type MacroPlan = keyof typeof macroPlans;
 
 export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [dailyCalories, setDailyCalories] = useState(2200);
   const [plan, setPlan] = useState<MacroPlan>('balanced');
   const [saved, setSaved] = useState(false);
@@ -33,13 +37,24 @@ export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [dailyCalories, plan]);
 
+  usePendingHistoryRestore<{
+    dailyCalories: number;
+    plan: MacroPlan;
+  }>('macro', (restored) => {
+    setDailyCalories(restored.dailyCalories);
+    setPlan(restored.plan);
+  });
+
   const handleSave = () => {
-    onSaveHistory('탄.단.지 계산기', `${result.selected.label}`, {
+    saveHistory('탄.단.지 계산기', `${result.selected.label}`, {
       총칼로리: `${formatNum(dailyCalories)} kcal`,
       플랜: result.selected.label,
       탄수화물: `${formatNum(result.carbsG)} g`,
       단백질: `${formatNum(result.proteinG)} g`,
       지방: `${formatNum(result.fatG)} g`,
+    }, {
+      dailyCalories,
+      plan,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -60,7 +75,7 @@ export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       <div className="space-y-3">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 총 칼로리 (kcal)</label>
-          <input type="number" value={dailyCalories} onChange={(e) => setDailyCalories(Number(e.target.value) || 0)} onBlur={() => setDailyCalories((prev) => Math.max(800, Math.min(6000, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput type="number" value={dailyCalories} defaultValueLabel={2200} onValueChange={(value) => setDailyCalories(Number(value) || 0)} onBlur={() => setDailyCalories((prev) => Math.max(800, Math.min(6000, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
         </div>
 
         <div>

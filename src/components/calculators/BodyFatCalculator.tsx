@@ -1,12 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Activity, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [age, setAge] = useState(30);
   const [heightCm, setHeightCm] = useState(175);
@@ -60,8 +64,20 @@ export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [age, gender, heightCm, weightKg]);
 
+  usePendingHistoryRestore<{
+    gender: 'male' | 'female';
+    age: number;
+    heightCm: number;
+    weightKg: number;
+  }>('bodyFat', (restored) => {
+    setGender(restored.gender);
+    setAge(restored.age);
+    setHeightCm(restored.heightCm);
+    setWeightKg(restored.weightKg);
+  });
+
   const handleSave = () => {
-    onSaveHistory('체지방률 계산기', `체지방률 ${bodyFat}% (${level})`, {
+    saveHistory('체지방률 계산기', `체지방률 ${bodyFat}% (${level})`, {
       성별: gender === 'male' ? '남성' : '여성',
       나이: `${age}세`,
       신장: `${heightCm}cm`,
@@ -69,6 +85,11 @@ export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       BMI: bmi,
       체지방률: `${bodyFat}%`,
       판정: level,
+    }, {
+      gender,
+      age,
+      heightCm,
+      weightKg,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -115,12 +136,13 @@ export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">나이</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={age}
             min={10}
             max={100}
-            onChange={(e) => setAge(Number(e.target.value) || 0)}
+            defaultValueLabel={30}
+            onValueChange={(value) => setAge(Number(value) || 0)}
             onBlur={() => setAge((prev) => Math.max(10, Math.min(100, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -128,12 +150,13 @@ export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (cm)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={heightCm}
             min={100}
             max={230}
-            onChange={(e) => setHeightCm(Number(e.target.value) || 0)}
+            defaultValueLabel={175}
+            onValueChange={(value) => setHeightCm(Number(value) || 0)}
             onBlur={() => setHeightCm((prev) => Math.max(100, Math.min(230, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -141,12 +164,13 @@ export const BodyFatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (kg)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={weightKg}
             min={20}
             max={250}
-            onChange={(e) => setWeightKg(Number(e.target.value) || 0)}
+            defaultValueLabel={70}
+            onValueChange={(value) => setWeightKg(Number(value) || 0)}
             onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />

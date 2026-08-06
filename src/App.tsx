@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CalculatorCategory, CalculatorId, CalculationHistoryItem } from './types';
+import { CalculatorCategory, CalculatorId, CalculationHistoryItem, CalculationInputState, SaveHistoryFn } from './types';
 import { CALCULATOR_LIST, CALCULATOR_GUIDES } from './data/calculatorInfo';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -8,6 +8,7 @@ import { RecentHistoryModal } from './components/RecentHistoryModal';
 import { QuickNavGrid } from './components/QuickNavGrid';
 import { AdSenseBanner } from './components/AdSenseBanner';
 import { CalculatorGuideCard } from './components/CalculatorGuideCard';
+import { queuePendingHistoryRestore } from './utils/historyRestore';
 
 // Calculators
 import { SalaryCalculator } from './components/calculators/SalaryCalculator';
@@ -55,6 +56,9 @@ export default function App() {
   });
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [calculatorRenderNonce, setCalculatorRenderNonce] = useState(0);
+  const [saveToast, setSaveToast] = useState<{ key: number; message: string } | null>(null);
+  const [latestSavedHistoryId, setLatestSavedHistoryId] = useState<string | null>(null);
   const [legalModalType, setLegalModalType] = useState<'terms' | 'privacy' | 'disclaimer' | 'contact' | null>(null);
 
   // Sync dark mode class on HTML element
@@ -68,11 +72,36 @@ export default function App() {
     }
   }, [darkMode]);
 
+  useEffect(() => {
+    if (!saveToast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSaveToast(null);
+    }, 2200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [saveToast]);
+
+  useEffect(() => {
+    if (!latestSavedHistoryId) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLatestSavedHistoryId(null);
+    }, 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [latestSavedHistoryId]);
+
   // Save history to LocalStorage
-  const saveToHistory = (
+  const saveToHistory: SaveHistoryFn = (
     title: string,
     summary: string,
-    details: Record<string, string | number>
+    details: Record<string, string | number>,
+    inputState?: CalculationInputState
   ) => {
     const calcMeta = CALCULATOR_LIST.find((c) => c.id === activeCalcId);
     const newItem: CalculationHistoryItem = {
@@ -82,20 +111,42 @@ export default function App() {
       timestamp: Date.now(),
       summary,
       details,
+      inputState,
     };
 
-    const updated = [newItem, ...history].slice(0, 30); // Keep last 30
-    setHistory(updated);
-    try {
-      localStorage.setItem('calc_history', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save history', e);
-    }
+    setHistory((prev) => {
+      const updated = [newItem, ...prev].slice(0, 30);
+      try {
+        localStorage.setItem('calc_history', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save history', e);
+      }
+      return updated;
+    });
+    setLatestSavedHistoryId(newItem.id);
+    setSaveToast({
+      key: Date.now(),
+      message: `${calcMeta ? calcMeta.name : title} 저장됨`,
+    });
   };
 
   const handleClearHistory = () => {
     setHistory([]);
     localStorage.removeItem('calc_history');
+  };
+
+  const handleSelectHistory = (item: CalculationHistoryItem) => {
+    const calcMeta = CALCULATOR_LIST.find((calc) => calc.id === item.calculatorId);
+
+    queuePendingHistoryRestore(item);
+    setActiveCategory(calcMeta?.category ?? 'all');
+    setActiveCalcId(item.calculatorId);
+    setCalculatorRenderNonce((prev) => prev + 1);
+    setIsHistoryOpen(false);
+
+    window.setTimeout(() => {
+      document.getElementById('calculator-widget')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   };
 
   const activeCalcMeta = CALCULATOR_LIST.find((c) => c.id === activeCalcId) || CALCULATOR_LIST[0];
@@ -229,7 +280,7 @@ export default function App() {
 
           {/* Active Calculator Widget Area */}
           <section className="scroll-mt-24" id="calculator-widget">
-            {renderCalculator()}
+            <div key={`${activeCalcId}-${calculatorRenderNonce}`}>{renderCalculator()}</div>
           </section>
 
           {/* Middle Content AdSense Banner */}
@@ -272,12 +323,30 @@ export default function App() {
         type={legalModalType}
       />
 
+      {saveToast && (
+        <div className="fixed top-20 left-1/2 z-50 -translate-x-1/2 px-4 w-full max-w-md pointer-events-none">
+          <div className="pointer-events-auto rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-white/95 dark:bg-slate-900/95 backdrop-blur px-4 py-3 shadow-xl shadow-emerald-900/10 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-slate-900 dark:text-slate-100">저장됨</div>
+                <div className="text-xs text-slate-600 dark:text-slate-300 break-words">{saveToast.message}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recent History Modal */}
       <RecentHistoryModal
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
         history={history}
         onClearHistory={handleClearHistory}
+        onSelectHistory={handleSelectHistory}
+        latestSavedHistoryId={latestSavedHistoryId}
       />
     </div>
   );

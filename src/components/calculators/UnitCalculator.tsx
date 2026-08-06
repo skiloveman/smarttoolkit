@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Ruler, Copy, Check, ArrowLeftRight, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [unitType, setUnitType] = useState<'pyung' | 'length' | 'weight' | 'temp'>('pyung');
   const [inputValue, setInputValue] = useState<number>(34); // 34평 default (84㎡)
   const [copied, setCopied] = useState(false);
@@ -24,6 +28,14 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   // Weight: kg <-> lb
   const lbVal = Number((inputValue * 2.20462).toFixed(2));
 
+  usePendingHistoryRestore<{
+    unitType: 'pyung' | 'length' | 'weight' | 'temp';
+    inputValue: number;
+  }>('unit', (restored) => {
+    setUnitType(restored.unitType);
+    setInputValue(restored.inputValue);
+  });
+
   const handleCopy = () => {
     let text = '';
     if (unitType === 'pyung') {
@@ -39,9 +51,12 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory('단위 변환 결과', `${inputValue}평 = ${sqmResult}㎡`, {
+    saveHistory('단위 변환 결과', `${inputValue}평 = ${sqmResult}㎡`, {
       '입력 단위': `${inputValue} 평`,
       '변환 결과': `${sqmResult} ㎡`,
+    }, {
+      unitType,
+      inputValue,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -97,10 +112,11 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               면적 평수 입력 (평)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={inputValue}
-              onChange={(e) => setInputValue(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={34}
+              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
             <div className="flex flex-wrap gap-1.5">
@@ -155,10 +171,11 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               길이 입력 (cm)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={inputValue}
-              onChange={(e) => setInputValue(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={170}
+              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
           </div>
@@ -185,10 +202,11 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               무게 입력 (kg)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={inputValue}
-              onChange={(e) => setInputValue(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={70}
+              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
           </div>

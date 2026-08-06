@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Sparkles, Copy, Check, BookmarkPlus, RefreshCw, Dices, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { SaveHistoryFn } from '../../types';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gameCount, setGameCount] = useState<number>(5);
   const [fixedNumbers, setFixedNumbers] = useState<number[]>([]);
   const [excludedNumbers, setExcludedNumbers] = useState<number[]>([]);
@@ -20,6 +23,20 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+
+  usePendingHistoryRestore<{
+    gameCount: number;
+    fixedNumbers: number[];
+    excludedNumbers: number[];
+    showSettings: boolean;
+    games: number[][];
+  }>('lotto', (restored) => {
+    setGameCount(restored.gameCount);
+    setFixedNumbers(restored.fixedNumbers);
+    setExcludedNumbers(restored.excludedNumbers);
+    setShowSettings(restored.showSettings);
+    setGames(restored.games);
+  });
 
   // Ball Color Helper for Korean Lotto 6/45
   const getBallStyle = (num: number) => {
@@ -119,7 +136,13 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       detailsObj[`${labels[idx]}게임`] = g.join(', ');
     });
 
-    onSaveHistory('로또 번호 자동 추출', `${gameCount}게임 로또 번호 생성 완료`, detailsObj);
+    saveHistory('로또 번호 자동 추출', `${gameCount}게임 로또 번호 생성 완료`, detailsObj, {
+      gameCount,
+      fixedNumbers,
+      excludedNumbers,
+      showSettings,
+      games,
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

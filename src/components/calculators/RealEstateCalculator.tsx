@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Home, Copy, Check, BookmarkPlus, Building2, ShieldCheck } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -10,6 +13,7 @@ type PropertyType = 'house' | 'officetel' | 'commercial'; // 주택, 오피스�
 type TradeType = 'buy' | 'jeonse' | 'monthly'; // 매매, 전세, 월세
 
 export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [calcTab, setCalcTab] = useState<'brokerage' | 'tax'>('brokerage');
   const [propertyType, setPropertyType] = useState<PropertyType>('house');
   const [tradeType, setTradeType] = useState<TradeType>('buy');
@@ -115,6 +119,24 @@ export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const ruralSpecialTax = areaOver85 ? Math.round(price * 0.002) : 0; // 농어촌특별세 0.2%
   const totalAcquisitionTax = acqTaxAmount + localEduTax + ruralSpecialTax;
 
+  usePendingHistoryRestore<{
+    calcTab: 'brokerage' | 'tax';
+    propertyType: PropertyType;
+    tradeType: TradeType;
+    price: number;
+    monthlyRent: number;
+    houseCount: number;
+    areaOver85: boolean;
+  }>('realEstate', (restored) => {
+    setCalcTab(restored.calcTab);
+    setPropertyType(restored.propertyType);
+    setTradeType(restored.tradeType);
+    setPrice(restored.price);
+    setMonthlyRent(restored.monthlyRent);
+    setHouseCount(restored.houseCount);
+    setAreaOver85(restored.areaOver85);
+  });
+
   const handleCopy = () => {
     let text = '';
     const propMap = { house: '주택', officetel: '오피스텔', commercial: '토지/상가' };
@@ -152,7 +174,7 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
     const tradeMap = { buy: '매매', jeonse: '전세', monthly: '월세' };
 
     if (calcTab === 'brokerage') {
-      onSaveHistory(
+      saveHistory(
         '부동산 중개수수료 계산',
         `${propMap[propertyType]} ${tradeMap[tradeType]} ${formatKrw(price)} = 복비 ${formatKrw(totalBrokerageFee)}`,
         {
@@ -162,10 +184,19 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
           상한요율: `${(feeRate * 100).toFixed(2)}%`,
           중개수수료: formatKrw(rawFee),
           부가세포함총액: formatKrw(totalBrokerageFee),
+        },
+        {
+          calcTab,
+          propertyType,
+          tradeType,
+          price,
+          monthlyRent,
+          houseCount,
+          areaOver85,
         }
       );
     } else {
-      onSaveHistory(
+      saveHistory(
         '부동산 취득세 계산',
         `${propMap[propertyType]} ${formatKrw(price)} = 총 취득세 ${formatKrw(totalAcquisitionTax)}`,
         {
@@ -174,6 +205,15 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
           취득세율: `${(acqTaxRate * 100).toFixed(2)}%`,
           취득세액: formatKrw(acqTaxAmount),
           총세액합계: formatKrw(totalAcquisitionTax),
+        },
+        {
+          calcTab,
+          propertyType,
+          tradeType,
+          price,
+          monthlyRent,
+          houseCount,
+          areaOver85,
         }
       );
     }
@@ -283,11 +323,12 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
               <span>{tradeType === 'monthly' ? '보증금 (원)' : '거래가 / 취득가액 (원)'}</span>
               <span className="text-indigo-600 font-bold">{formatKrw(price)}</span>
             </div>
-            <input
+            <DefaultValueInput
               type="number"
               step="10000000"
               value={price}
-              onChange={(e) => setPrice(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={500000000}
+              onValueChange={(value) => setPrice(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -312,11 +353,12 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
                 <span>월 차임 (월세, 원)</span>
                 <span className="text-indigo-600 font-bold">{formatKrw(monthlyRent)}</span>
               </div>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="50000"
                 value={monthlyRent}
-                onChange={(e) => setMonthlyRent(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={500000}
+                onValueChange={(value) => setMonthlyRent(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-sm font-bold text-slate-800 dark:text-slate-200"
               />
             </div>

@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Clock, Copy, Check, BookmarkPlus, DollarSign, AlertCircle } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [hourlyWage, setHourlyWage] = useState<number>(10030); // 2025/2026 최저시급 10,030원
   const [workHoursPerDay, setWorkHoursPerDay] = useState<number>(8); // 하루 8시간
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState<number>(5); // 주 5일
@@ -52,6 +56,20 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const netMonthlyWage = grossMonthlyWage - deductionAmount;
 
+  usePendingHistoryRestore<{
+    hourlyWage: number;
+    workHoursPerDay: number;
+    workDaysPerWeek: number;
+    overtimeHoursPerWeek: number;
+    taxDeduction: 'none' | 'tax33' | 'insurance4';
+  }>('hourly', (restored) => {
+    setHourlyWage(restored.hourlyWage);
+    setWorkHoursPerDay(restored.workHoursPerDay);
+    setWorkDaysPerWeek(restored.workDaysPerWeek);
+    setOvertimeHoursPerWeek(restored.overtimeHoursPerWeek);
+    setTaxDeduction(restored.taxDeduction);
+  });
+
   const handleCopy = () => {
     const text = `[알바 시급 & 주휴수당 계산 결과]
 • 적용 시급: ${formatKrw(hourlyWage)} (2025/2026 최저시급 10,030원)
@@ -73,7 +91,7 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '시급 & 주휴수당 계산',
       `시급 ${formatKrw(hourlyWage)} (주${weeklyRegularHours}시간) = 실수령 월급 ${formatKrw(netMonthlyWage)}`,
       {
@@ -84,6 +102,13 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         세전월급: formatKrw(grossMonthlyWage),
         공제: formatKrw(deductionAmount),
         실수령월급: formatKrw(netMonthlyWage),
+      },
+      {
+        hourlyWage,
+        workHoursPerDay,
+        workDaysPerWeek,
+        overtimeHoursPerWeek,
+        taxDeduction,
       }
     );
     setSaved(true);
@@ -122,11 +147,12 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <span>적용 시급 (원)</span>
               <span className="text-teal-600 font-bold">{formatKrw(hourlyWage)}</span>
             </div>
-            <input
+            <DefaultValueInput
               type="number"
               step="100"
               value={hourlyWage}
-              onChange={(e) => setHourlyWage(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={10030}
+              onValueChange={(value) => setHourlyWage(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -150,11 +176,12 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 일일 근무시간 (시간)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="0.5"
                 value={workHoursPerDay}
-                onChange={(e) => setWorkHoursPerDay(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={8}
+                onValueChange={(value) => setWorkHoursPerDay(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -163,11 +190,12 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 주당 근무일수 (일)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="1"
                 value={workDaysPerWeek}
-                onChange={(e) => setWorkDaysPerWeek(Math.min(7, Math.max(0, Number(e.target.value))))}
+                defaultValueLabel={5}
+                onValueChange={(value) => setWorkDaysPerWeek(Math.min(7, Math.max(0, Number(value) || 0)))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -178,11 +206,12 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               주당 연장/야간/휴일 근무시간 (1.5배 수당)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               step="0.5"
               value={overtimeHoursPerWeek}
-              onChange={(e) => setOvertimeHoursPerWeek(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={0}
+              onValueChange={(value) => setOvertimeHoursPerWeek(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

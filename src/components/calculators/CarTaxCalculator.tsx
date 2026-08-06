@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Car, Copy, Check, BookmarkPlus, Fuel, ShieldCheck } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [activeTab, setActiveTab] = useState<'tax' | 'fuel'>('tax');
 
   // Car Tax Inputs
@@ -55,6 +59,24 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const annualFuelCost = Math.round(totalLitersNeeded * fuelPricePerLiter);
   const monthlyFuelCost = Math.round(annualFuelCost / 12);
 
+  usePendingHistoryRestore<{
+    activeTab: 'tax' | 'fuel';
+    cc: number;
+    carAgeYears: number;
+    isCommercial: boolean;
+    annualDistanceKm: number;
+    fuelEfficiency: number;
+    fuelPricePerLiter: number;
+  }>('carTax', (restored) => {
+    setActiveTab(restored.activeTab);
+    setCc(restored.cc);
+    setCarAgeYears(restored.carAgeYears);
+    setIsCommercial(restored.isCommercial);
+    setAnnualDistanceKm(restored.annualDistanceKm);
+    setFuelEfficiency(restored.fuelEfficiency);
+    setFuelPricePerLiter(restored.fuelPricePerLiter);
+  });
+
   const handleCopy = () => {
     let text = '';
     if (activeTab === 'tax') {
@@ -80,7 +102,7 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const handleSave = () => {
     if (activeTab === 'tax') {
-      onSaveHistory(
+      saveHistory(
         '자동차세 계산',
         `${cc}cc (${carAgeYears}년차) = 연간 자동차세 ${formatKrw(totalAnnualCarTax)}`,
         {
@@ -88,10 +110,19 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           차령년수: `${carAgeYears}년차 (할인율 ${(ageDiscountRatio * 100).toFixed(0)}%)`,
           연간총자동차세: formatKrw(totalAnnualCarTax),
           '1월연납할인가': formatKrw(janPrepaymentTax),
+        },
+        {
+          activeTab,
+          cc,
+          carAgeYears,
+          isCommercial,
+          annualDistanceKm,
+          fuelEfficiency,
+          fuelPricePerLiter,
         }
       );
     } else {
-      onSaveHistory(
+      saveHistory(
         '차량 유류비 계산',
         `연 ${formatNum(annualDistanceKm)}km (연비 ${fuelEfficiency}km/L) = 월 유류비 ${formatKrw(monthlyFuelCost)}`,
         {
@@ -100,6 +131,15 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           유류단가: `${formatKrw(fuelPricePerLiter)}/L`,
           연간총유류비: formatKrw(annualFuelCost),
           월평균유류비: formatKrw(monthlyFuelCost),
+        },
+        {
+          activeTab,
+          cc,
+          carAgeYears,
+          isCommercial,
+          annualDistanceKm,
+          fuelEfficiency,
+          fuelPricePerLiter,
         }
       );
     }
@@ -156,11 +196,12 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <span>차량 배기량 (cc)</span>
                 <span className="text-blue-600 font-bold">{formatNum(cc)} cc</span>
               </div>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="50"
                 value={cc}
-                onChange={(e) => setCc(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={1998}
+                onValueChange={(value) => setCc(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -184,12 +225,13 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <span>차령 (등록 연식 년차)</span>
                 <span className="text-blue-600 font-bold">{carAgeYears}년차 (차령감가 {(ageDiscountRatio * 100).toFixed(0)}%)</span>
               </div>
-              <input
+              <DefaultValueInput
                 type="number"
                 min="1"
                 max="20"
                 value={carAgeYears}
-                onChange={(e) => setCarAgeYears(Math.max(1, Number(e.target.value)))}
+                defaultValueLabel={1}
+                onValueChange={(value) => setCarAgeYears(Math.max(1, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-sm font-bold text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -274,11 +316,12 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 연간 주행거리 (km)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="1000"
                 value={annualDistanceKm}
-                onChange={(e) => setAnnualDistanceKm(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={15000}
+                onValueChange={(value) => setAnnualDistanceKm(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -301,11 +344,12 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   복합 연비 (km/L)
                 </label>
-                <input
+                <DefaultValueInput
                   type="number"
                   step="0.5"
                   value={fuelEfficiency}
-                  onChange={(e) => setFuelEfficiency(Math.max(0.1, Number(e.target.value)))}
+                  defaultValueLabel={12.5}
+                  onValueChange={(value) => setFuelEfficiency(Math.max(0.1, Number(value) || 0))}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
                 />
               </div>
@@ -314,11 +358,12 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   유류 단가 (원/L)
                 </label>
-                <input
+                <DefaultValueInput
                   type="number"
                   step="10"
                   value={fuelPricePerLiter}
-                  onChange={(e) => setFuelPricePerLiter(Math.max(0, Number(e.target.value)))}
+                  defaultValueLabel={1680}
+                  onValueChange={(value) => setFuelPricePerLiter(Math.max(0, Number(value) || 0))}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
                 />
               </div>

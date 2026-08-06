@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Percent, Copy, Check, Tag, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   // Discount Calculator
   const [originalPrice, setOriginalPrice] = useState<number>(50000);
   const [discountPercent, setDiscountPercent] = useState<number>(20);
@@ -17,6 +21,18 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  usePendingHistoryRestore<{
+    originalPrice: number;
+    discountPercent: number;
+    baseVal: number;
+    ratioVal: number;
+  }>('percent', (restored) => {
+    setOriginalPrice(restored.originalPrice);
+    setDiscountPercent(restored.discountPercent);
+    setBaseVal(restored.baseVal);
+    setRatioVal(restored.ratioVal);
+  });
 
   // Discount Math
   const discountAmount = Math.round((originalPrice * discountPercent) / 100);
@@ -37,11 +53,16 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory('할인율/퍼센트 계산', `${formatKrw(originalPrice)}의 ${discountPercent}% 할인 = ${formatKrw(finalPrice)}`, {
+    saveHistory('할인율/퍼센트 계산', `${formatKrw(originalPrice)}의 ${discountPercent}% 할인 = ${formatKrw(finalPrice)}`, {
       원가: formatKrw(originalPrice),
       할인율: `${discountPercent}%`,
       할인금액: formatKrw(discountAmount),
       최종할인가격: formatKrw(finalPrice),
+    }, {
+      originalPrice,
+      discountPercent,
+      baseVal,
+      ratioVal,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -63,11 +84,12 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
             원래 가격 (원)
           </label>
-          <input
+          <DefaultValueInput
             type="number"
             step="1000"
             value={originalPrice}
-            onChange={(e) => setOriginalPrice(Math.max(0, Number(e.target.value)))}
+            defaultValueLabel={50000}
+            onValueChange={(value) => setOriginalPrice(Math.max(0, Number(value) || 0))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
           />
         </div>
@@ -125,10 +147,11 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               전체 값
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={baseVal}
-              onChange={(e) => setBaseVal(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={100000}
+              onValueChange={(value) => setBaseVal(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -137,10 +160,11 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               비율 (%)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={ratioVal}
-              onChange={(e) => setRatioVal(Number(e.target.value))}
+              defaultValueLabel={15}
+              onValueChange={(value) => setRatioVal(Number(value) || 0)}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

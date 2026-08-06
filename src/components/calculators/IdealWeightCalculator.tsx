@@ -1,12 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Ruler, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [heightCm, setHeightCm] = useState(175);
   const [currentWeightKg, setCurrentWeightKg] = useState(70);
@@ -27,14 +31,28 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [currentWeightKg, gender, heightCm]);
 
+  usePendingHistoryRestore<{
+    gender: 'male' | 'female';
+    heightCm: number;
+    currentWeightKg: number;
+  }>('idealWeight', (restored) => {
+    setGender(restored.gender);
+    setHeightCm(restored.heightCm);
+    setCurrentWeightKg(restored.currentWeightKg);
+  });
+
   const handleSave = () => {
-    onSaveHistory('표준 체중 계산기', `표준 체중 ${idealWeight}kg`, {
+    saveHistory('표준 체중 계산기', `표준 체중 ${idealWeight}kg`, {
       성별: gender === 'male' ? '남성' : '여성',
       신장: `${heightCm}cm`,
       현재체중: `${currentWeightKg}kg`,
       표준체중: `${idealWeight}kg`,
       정상범위: `${minWeight}kg ~ ${maxWeight}kg`,
       차이: `${diff > 0 ? '+' : ''}${diff}kg`,
+    }, {
+      gender,
+      heightCm,
+      currentWeightKg,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -81,12 +99,13 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (cm)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={heightCm}
             min={100}
             max={230}
-            onChange={(e) => setHeightCm(Number(e.target.value) || 0)}
+            defaultValueLabel={175}
+            onValueChange={(value) => setHeightCm(Number(value) || 0)}
             onBlur={() => setHeightCm((prev) => Math.max(100, Math.min(230, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -94,12 +113,13 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">현재 체중 (kg)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={currentWeightKg}
             min={20}
             max={250}
-            onChange={(e) => setCurrentWeightKg(Number(e.target.value) || 0)}
+            defaultValueLabel={70}
+            onValueChange={(value) => setCurrentWeightKg(Number(value) || 0)}
             onBlur={() => setCurrentWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />

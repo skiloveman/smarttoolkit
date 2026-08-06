@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { calculateExchange, DEFAULT_CURRENCIES, formatNum } from '../../utils/calculators';
-import { ExchangeInput } from '../../types';
+import { ExchangeInput, SaveHistoryFn } from '../../types';
 import { ArrowLeftRight, Copy, Check, RefreshCw, Edit2, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [fromCode, setFromCode] = useState<string>('USD');
   const [toCode, setToCode] = useState<string>('KRW');
   const [amount, setAmount] = useState<number>(100);
@@ -31,6 +34,20 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const fromCurr = DEFAULT_CURRENCIES.find((c) => c.code === fromCode) || DEFAULT_CURRENCIES[1];
   const toCurr = DEFAULT_CURRENCIES.find((c) => c.code === toCode) || DEFAULT_CURRENCIES[0];
 
+  usePendingHistoryRestore<{
+    fromCode: string;
+    toCode: string;
+    amount: number;
+    customRate: number | null;
+    isEditingRate: boolean;
+  }>('exchange', (restored) => {
+    setFromCode(restored.fromCode);
+    setToCode(restored.toCode);
+    setAmount(restored.amount);
+    setCustomRate(restored.customRate ?? undefined);
+    setIsEditingRate(restored.isEditingRate);
+  });
+
   const handleSwap = () => {
     setFromCode(toCode);
     setToCode(fromCode);
@@ -48,13 +65,20 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '환율 계산 결과',
       `${fromCurr.flag} ${amount} ${fromCode} = ${toCurr.flag} ${result.convertedAmount} ${toCode}`,
       {
         '보내는 통화': `${fromCurr.flag} ${amount} ${fromCode}`,
         '받는 통화': `${toCurr.flag} ${result.convertedAmount} ${toCode}`,
         적용환율: `1 ${fromCode} = ${result.appliedRate} ${toCode}`,
+      },
+      {
+        fromCode,
+        toCode,
+        amount,
+        customRate: customRate ?? null,
+        isEditingRate,
       }
     );
     setSaved(true);
@@ -130,10 +154,11 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               환산 금액 입력 ({fromCurr.symbol})
             </label>
             <div className="relative">
-              <input
+              <DefaultValueInput
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={100}
+                onValueChange={(value) => setAmount(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
               />
               <span className="absolute right-4 top-3.5 text-sm font-bold text-slate-400">
@@ -180,11 +205,12 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </div>
             {isEditingRate && (
               <div className="mt-2 flex items-center gap-2">
-                <input
+                <DefaultValueInput
                   type="number"
                   step="0.01"
                   value={customRate ?? result.appliedRate}
-                  onChange={(e) => setCustomRate(Number(e.target.value))}
+                  defaultValueLabel={result.appliedRate}
+                  onValueChange={(value) => setCustomRate(Number(value) || 0)}
                   className="w-40 rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
                 />
                 <span className="text-xs text-slate-500">

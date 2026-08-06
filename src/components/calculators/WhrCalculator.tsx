@@ -1,11 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Percent, BookmarkPlus } from 'lucide-react';
+import { SaveHistoryFn } from '../../types';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const WhrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [waistCm, setWaistCm] = useState(82);
   const [hipCm, setHipCm] = useState(95);
@@ -47,13 +51,27 @@ export const WhrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     };
   }, [gender, hipCm, waistCm]);
 
+  usePendingHistoryRestore<{
+    gender: 'male' | 'female';
+    waistCm: number;
+    hipCm: number;
+  }>('whr', (restored) => {
+    setGender(restored.gender);
+    setWaistCm(restored.waistCm);
+    setHipCm(restored.hipCm);
+  });
+
   const handleSave = () => {
-    onSaveHistory('WHR 계산기', `WHR ${whr} (${level})`, {
+    saveHistory('WHR 계산기', `WHR ${whr} (${level})`, {
       성별: gender === 'male' ? '남성' : '여성',
       허리둘레: `${waistCm}cm`,
       엉덩이둘레: `${hipCm}cm`,
       WHR: whr,
       판정: level,
+    }, {
+      gender,
+      waistCm,
+      hipCm,
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -100,12 +118,13 @@ export const WhrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">허리둘레 (cm)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={waistCm}
             min={30}
             max={220}
-            onChange={(e) => setWaistCm(Number(e.target.value) || 0)}
+            defaultValueLabel={82}
+            onValueChange={(value) => setWaistCm(Number(value) || 0)}
             onBlur={() => setWaistCm((prev) => Math.max(30, Math.min(220, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
@@ -113,12 +132,13 @@ export const WhrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">엉덩이둘레 (cm)</label>
-          <input
+          <DefaultValueInput
             type="number"
             value={hipCm}
             min={30}
             max={220}
-            onChange={(e) => setHipCm(Number(e.target.value) || 0)}
+            defaultValueLabel={95}
+            onValueChange={(value) => setHipCm(Number(value) || 0)}
             onBlur={() => setHipCm((prev) => Math.max(30, Math.min(220, prev || 0)))}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />

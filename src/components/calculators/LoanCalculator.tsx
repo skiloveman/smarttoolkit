@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Landmark, Copy, Check, BookmarkPlus, Calendar, Table, Percent } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -9,6 +12,7 @@ interface Props {
 type RepaymentType = 'equalPrincipalInterest' | 'equalPrincipal' | 'bullet'; // 원리금균등, 원금균등, 만기일시
 
 export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [loanAmount, setLoanAmount] = useState<number>(100000000); // 1억 원
   const [annualRate, setAnnualRate] = useState<number>(4.5); // 4.5%
   const [termMonths, setTermMonths] = useState<number>(36); // 36개월 (3년)
@@ -92,6 +96,20 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const firstMonthPayment = schedule[0]?.payment || 0;
   const lastMonthPayment = schedule[schedule.length - 1]?.payment || 0;
 
+  usePendingHistoryRestore<{
+    loanAmount: number;
+    annualRate: number;
+    termMonths: number;
+    graceMonths: number;
+    repaymentType: RepaymentType;
+  }>('loan', (restored) => {
+    setLoanAmount(restored.loanAmount);
+    setAnnualRate(restored.annualRate);
+    setTermMonths(restored.termMonths);
+    setGraceMonths(restored.graceMonths);
+    setRepaymentType(restored.repaymentType);
+  });
+
   const handleCopy = () => {
     const typeMap = {
       equalPrincipalInterest: '원리금균등상환',
@@ -123,7 +141,7 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       bullet: '만기일시',
     };
 
-    onSaveHistory(
+    saveHistory(
       '대출 이자 계산',
       `대출 ${formatKrw(loanAmount)} (${annualRate}%, ${termMonths}개월, ${typeMap[repaymentType]}) = 총 이자 ${formatKrw(totalInterest)}`,
       {
@@ -134,6 +152,13 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         첫달상환액: formatKrw(firstMonthPayment),
         총대출이자: formatKrw(totalInterest),
         총상환금액: formatKrw(totalRepayment),
+      },
+      {
+        loanAmount,
+        annualRate,
+        termMonths,
+        graceMonths,
+        repaymentType,
       }
     );
     setSaved(true);
@@ -185,11 +210,12 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <span>대출 원금 (원)</span>
               <span className="text-indigo-600 font-bold">{formatKrw(loanAmount)}</span>
             </div>
-            <input
+            <DefaultValueInput
               type="number"
               step="1000000"
               value={loanAmount}
-              onChange={(e) => setLoanAmount(Math.max(0, Number(e.target.value)))}
+              defaultValueLabel={100000000}
+              onValueChange={(value) => setLoanAmount(Math.max(0, Number(value) || 0))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
@@ -213,11 +239,12 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 연 이자율 (%)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="0.1"
                 value={annualRate}
-                onChange={(e) => setAnnualRate(Math.max(0, Number(e.target.value)))}
+                defaultValueLabel={4.5}
+                onValueChange={(value) => setAnnualRate(Math.max(0, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -225,11 +252,12 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 대출 기간 (개월)
               </label>
-              <input
+              <DefaultValueInput
                 type="number"
                 step="12"
                 value={termMonths}
-                onChange={(e) => setTermMonths(Math.max(1, Number(e.target.value)))}
+                defaultValueLabel={36}
+                onValueChange={(value) => setTermMonths(Math.max(1, Number(value) || 0))}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -254,10 +282,11 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
               거치 기간 (이자만 내는 기간, 개월)
             </label>
-            <input
+            <DefaultValueInput
               type="number"
               value={graceMonths}
-              onChange={(e) => setGraceMonths(Math.min(termMonths - 1, Math.max(0, Number(e.target.value))))}
+              defaultValueLabel={0}
+              onValueChange={(value) => setGraceMonths(Math.min(termMonths - 1, Math.max(0, Number(value) || 0)))}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

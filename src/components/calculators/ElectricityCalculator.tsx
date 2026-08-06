@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { calculateElectricity, formatKrw } from '../../utils/calculators';
-import { ElectricityInput } from '../../types';
+import { ElectricityInput, SaveHistoryFn } from '../../types';
 import { Zap, Copy, Check, AlertTriangle, BookmarkPlus } from 'lucide-react';
+import { DefaultValueInput } from '../DefaultValueInput';
+import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
 export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
+  const saveHistory = onSaveHistory as SaveHistoryFn;
   const [contractType, setContractType] = useState<'lowVoltage' | 'highVoltage'>('lowVoltage');
   const [season, setSeason] = useState<'summer' | 'other'>('other');
   const [usageKwh, setUsageKwh] = useState<number>(320); // 320 kWh default
@@ -24,6 +27,16 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   );
 
   const result = useMemo(() => calculateElectricity(elecInput), [elecInput]);
+
+  usePendingHistoryRestore<{
+    contractType: 'lowVoltage' | 'highVoltage';
+    season: 'summer' | 'other';
+    usageKwh: number;
+  }>('electricity', (restored) => {
+    setContractType(restored.contractType);
+    setSeason(restored.season);
+    setUsageKwh(restored.usageKwh);
+  });
 
   const handleCopy = () => {
     const text = `[전기요금 계산 결과]
@@ -44,7 +57,7 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   };
 
   const handleSave = () => {
-    onSaveHistory(
+    saveHistory(
       '전기요금 예상 계산',
       `예상 요금: ${formatKrw(result.totalBill)} (${usageKwh}kWh / ${result.tierName})`,
       {
@@ -52,7 +65,8 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         월사용량: `${usageKwh} kWh`,
         적용구간: result.tierName,
         최종예상요금: formatKrw(result.totalBill),
-      }
+      },
+      { contractType, season, usageKwh }
     );
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -141,10 +155,11 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 월간 전력 사용량
               </label>
               <div className="flex items-center gap-1">
-                <input
+                <DefaultValueInput
                   type="number"
                   value={usageKwh}
-                  onChange={(e) => setUsageKwh(Math.max(0, Number(e.target.value)))}
+                  defaultValueLabel={320}
+                  onValueChange={(value) => setUsageKwh(Math.max(0, Number(value) || 0))}
                   className="w-24 rounded-lg border border-slate-300 dark:border-slate-700 px-2 py-1 text-right text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none"
                 />
                 <span className="text-xs font-bold text-slate-500">kWh</span>

@@ -8,9 +8,11 @@ interface Props {
   onClose: () => void;
   history: CalculationHistoryItem[];
   onClearHistory: () => void;
+  onSelectHistory: (item: CalculationHistoryItem) => void;
+  latestSavedHistoryId: string | null;
 }
 
-export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, onClearHistory }) => {
+export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, onClearHistory, onSelectHistory, latestSavedHistoryId }) => {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -51,15 +53,38 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
               저장된 최근 계산 기록이 없습니다.<br />계산기 우측 상단의 북마크 버튼을 눌러 저장해보세요!
             </div>
           ) : (
-            history.map((item) => (
+            history.map((item) => {
+              const isFreshlySaved = item.id === latestSavedHistoryId;
+
+              return (
               <div
                 key={item.id}
-                className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-2 relative group"
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelectHistory(item)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onSelectHistory(item);
+                  }
+                }}
+                className={`w-full text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border space-y-2 relative group hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors ${
+                  isFreshlySaved
+                    ? 'border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-500/10 animate-[historySavedPulse_1.2s_ease-out_2]'
+                    : 'border-slate-200/80 dark:border-slate-800'
+                }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                    {item.calculatorName}
-                  </span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 truncate">
+                      {item.calculatorName}
+                    </span>
+                    {isFreshlySaved && (
+                      <span className="shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-950/70 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 animate-pulse">
+                        저장됨
+                      </span>
+                    )}
+                  </div>
                   <span className="text-[10px] text-slate-400">
                     {formatYmd(item.timestamp)}
                   </span>
@@ -80,7 +105,11 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
 
                 <div className="flex justify-end pt-1">
                   <button
-                    onClick={() => handleCopyItem(item)}
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleCopyItem(item);
+                    }}
                     className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1"
                   >
                     {copiedId === item.id ? (
@@ -97,7 +126,7 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
                   </button>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
 
