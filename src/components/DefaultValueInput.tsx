@@ -23,10 +23,12 @@ export const DefaultValueInput: React.FC<DefaultValueInputProps> = ({
   const [isPristine, setIsPristine] = useState(valueText === defaultText);
 
   useEffect(() => {
-    if (valueText !== defaultText) {
-      setIsPristine(false);
+    // Keep placeholder/default rendering in sync when parent state changes externally.
+    if (isFocused) {
+      return;
     }
-  }, [defaultText, valueText]);
+    setIsPristine(valueText === defaultText);
+  }, [defaultText, valueText, isFocused]);
 
   const handleFocus = (event: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
