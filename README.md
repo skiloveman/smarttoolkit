@@ -25,6 +25,13 @@ Prerequisites: Node.js 20+
 
 ## Deploy To Cloudflare Pages
 
+Use the deployment script below. It is hard-locked to the Cloudflare Pages project `smarttoolkit`.
+
+1. Build and deploy in one command:
+   `npm run deploy`
+2. Production domain:
+   `https://smarttoolkit.pages.dev/`
+
 Use these exact settings in Cloudflare Pages project configuration:
 
 1. Framework preset: `Vite`
