@@ -7,4 +7,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: /sitemap.xml
+Sitemap: https://www.smart-toolkit.com/sitemap.xml

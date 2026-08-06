@@ -17,6 +17,7 @@ export type CalculatorId =
   | 'exchange'
   | 'date'
   | 'unit'
+  | 'scientific'
   | 'percent'
   | 'lotto'
   | 'gold'
@@ -25,7 +26,8 @@ export type CalculatorId =
   | 'carTax'
   | 'realEstate'
   | 'ladderGame'
-  | 'gomoku';
+  | 'gomoku'
+  | 'watermelonGame';
 
 export interface CalculatorMeta {
   id: CalculatorId;

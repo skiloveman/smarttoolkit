@@ -27,6 +27,7 @@ import { ElectricityCalculator } from './components/calculators/ElectricityCalcu
 import { ExchangeCalculator } from './components/calculators/ExchangeCalculator';
 import { DateCalculator } from './components/calculators/DateCalculator';
 import { UnitCalculator } from './components/calculators/UnitCalculator';
+import { ScientificCalculator } from './components/calculators/ScientificCalculator';
 import { PercentCalculator } from './components/calculators/PercentCalculator';
 import { LottoCalculator } from './components/calculators/LottoCalculator';
 import { GoldCalculator } from './components/calculators/GoldCalculator';
@@ -36,6 +37,7 @@ import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
 import { GomokuCalculator } from './components/calculators/GomokuCalculator';
+import { WatermelonGameCalculator } from './components/calculators/WatermelonGameCalculator';
 
 import { ShieldCheck, CheckCircle, MessageCircleWarning } from 'lucide-react';
 
@@ -188,6 +190,8 @@ export default function App() {
         return <DateCalculator onSaveHistory={saveToHistory} />;
       case 'unit':
         return <UnitCalculator onSaveHistory={saveToHistory} />;
+      case 'scientific':
+        return <ScientificCalculator onSaveHistory={saveToHistory} />;
       case 'percent':
         return <PercentCalculator onSaveHistory={saveToHistory} />;
       case 'lotto':
@@ -206,6 +210,8 @@ export default function App() {
         return <LadderGameCalculator onSaveHistory={saveToHistory} />;
       case 'gomoku':
         return <GomokuCalculator onSaveHistory={saveToHistory} />;
+      case 'watermelonGame':
+        return <WatermelonGameCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }
