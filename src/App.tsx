@@ -35,6 +35,7 @@ import { HourlyCalculator } from './components/calculators/HourlyCalculator';
 import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
 import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
 import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
+import { GomokuCalculator } from './components/calculators/GomokuCalculator';
 
 import { ShieldCheck, CheckCircle, MessageCircleWarning } from 'lucide-react';
 
@@ -203,6 +204,8 @@ export default function App() {
         return <RealEstateCalculator onSaveHistory={saveToHistory} />;
       case 'ladderGame':
         return <LadderGameCalculator onSaveHistory={saveToHistory} />;
+      case 'gomoku':
+        return <GomokuCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }

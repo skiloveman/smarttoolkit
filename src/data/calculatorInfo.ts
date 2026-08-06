@@ -193,6 +193,15 @@ export const CALCULATOR_LIST: CalculatorMeta[] = [
     badge: '애니메이션 추첨',
     popular: true,
   },
+  {
+    id: 'gomoku',
+    name: '오목 게임',
+    shortDesc: '15x15 오목판에서 흑/백 번갈아 착수, 5목 완성 판정과 한 수 무르기 및 대국 상태 저장 지원',
+    category: 'games',
+    iconName: 'Sparkles',
+    badge: '15x15 오목 대국',
+    popular: true,
+  },
 ];
 
 export interface GuideArticle {
@@ -450,6 +459,27 @@ export const CALCULATOR_GUIDES: Record<string, GuideArticle> = {
       {
         question: '몇 명까지 사용할 수 있나요?',
         answer: '현재 UI에서는 2명 이상 12명 이하를 지원하며, 화면 크기에 따라 가로 스크롤로 전체 사다리를 확인할 수 있습니다.',
+      },
+    ],
+  },
+  gomoku: {
+    title: '오목 게임 규칙 및 사용 가이드',
+    summary: '15x15 바둑판에서 흑과 백이 번갈아 돌을 두며 가로, 세로, 대각선 중 어느 방향이든 먼저 5개를 연속으로 연결하면 승리하는 게임입니다.',
+    formulaText: '착수 좌표 기준 4방향(가로/세로/대각선 2축)의 연속 돌 개수를 검사하여 5개 이상이면 승리로 판정합니다.',
+    keyPoints: [
+      '흑이 선공이며, 한 번에 한 칸에만 돌을 둘 수 있습니다.',
+      '이미 돌이 놓인 칸에는 착수할 수 없습니다.',
+      '가로, 세로, 좌상-우하 대각선, 우상-좌하 대각선 중 한 방향이라도 5목이 완성되면 즉시 승리합니다.',
+      '한 수 무르기를 통해 최근 착수를 되돌리고 다시 진행할 수 있습니다.',
+    ],
+    faqs: [
+      {
+        question: '무승부는 언제 발생하나요?',
+        answer: '15x15 모든 칸이 돌로 채워질 때까지 승자가 결정되지 않으면 무승부로 처리됩니다.',
+      },
+      {
+        question: '게임 상태 저장 시 무엇이 기록되나요?',
+        answer: '현재 보드 배치, 현재 차례, 승패 상태, 총 착수 수가 함께 저장되어 나중에 같은 상태로 복원할 수 있습니다.',
       },
     ],
   },
