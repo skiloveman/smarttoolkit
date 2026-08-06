@@ -1,0 +1,10 @@
+# robots.txt for smart-toolkit
+# Allow Naver search crawler
+User-agent: Yeti
+Allow: /
+
+# Allow all other crawlers
+User-agent: *
+Allow: /
+
+Sitemap: /sitemap.xml
