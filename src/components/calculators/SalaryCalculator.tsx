@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { calculateSalary, formatKrw, formatNum } from '../../utils/calculators';
 import { SalaryInput, SaveHistoryFn } from '../../types';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Copy, Check, Info, Sparkles, RefreshCw, BookmarkPlus } from 'lucide-react';
+import { Copy, Check, Sparkles, BookmarkPlus } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
@@ -53,6 +52,22 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     { name: '4대보험료', value: result.totalSocialInsurance, color: '#10B981' },
     { name: '소득세/지방세', value: result.totalTax, color: '#F59E0B' },
   ];
+
+  const donutChartStyle = useMemo(() => {
+    const total = chartData.reduce((sum, entry) => sum + entry.value, 0);
+    if (total <= 0) {
+      return { background: 'conic-gradient(#e2e8f0 0deg 360deg)' };
+    }
+
+    let currentAngle = 0;
+    const stops = chartData.map((entry) => {
+      const startAngle = currentAngle;
+      currentAngle += (entry.value / total) * 360;
+      return `${entry.color} ${startAngle}deg ${currentAngle}deg`;
+    });
+
+    return { background: `conic-gradient(${stops.join(', ')})` };
+  }, [chartData]);
 
   const handleCopy = () => {
     const text = `[연봉 실수령액 계산 결과]
@@ -269,35 +284,15 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               </div>
             </div>
 
-            {/* Recharts Pie Chart */}
-            <div className="h-44 w-full relative mb-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={65}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number) => formatKrw(value)}
-                    contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      fontSize: '12px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="h-44 w-full relative mb-4 flex items-center justify-center">
+              <div
+                className="relative h-32 w-32 rounded-full shadow-sm"
+                style={donutChartStyle}
+                aria-label="실수령액과 공제 비율 차트"
+                role="img"
+              >
+                <div className="absolute inset-[18px] rounded-full bg-white dark:bg-slate-900" />
+              </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] text-slate-400">월 공제액</span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">

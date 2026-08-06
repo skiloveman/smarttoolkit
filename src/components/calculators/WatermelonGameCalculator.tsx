@@ -358,22 +358,22 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       </div>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="mx-auto w-full max-w-[16rem] [@media(orientation:landscape)_and_(max-width:767px)]:max-w-[18.5rem] sm:max-w-[22rem] grid grid-cols-6 gap-0.5 sm:gap-1">
           {Array.from({ length: COLS }, (_, col) => (
             <button
               key={col}
               type="button"
               onClick={() => dropAtColumn(col)}
               disabled={gameOver}
-              className="rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 py-0.5 [@media(orientation:landscape)_and_(max-width:767px)]:py-1.5 text-[10px] [@media(orientation:landscape)_and_(max-width:767px)]:text-[11px] sm:text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {col + 1}열
             </button>
           ))}
         </div>
 
-        <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-900">
-          <div className="grid grid-cols-6 gap-1.5">
+        <div className="mx-auto w-full max-w-[16rem] [@media(orientation:landscape)_and_(max-width:767px)]:max-w-[18.5rem] sm:max-w-[22rem] rounded-xl border border-slate-200 dark:border-slate-700 p-1 sm:p-2 bg-white dark:bg-slate-900">
+          <div className="grid grid-cols-6 gap-0.5 sm:gap-1">
             {board.map((row, rowIndex) =>
               row.map((cell, colIndex) => (
                 <button
@@ -384,7 +384,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
                   className="aspect-square rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:cursor-not-allowed"
                   title={cell === EMPTY ? '비어 있음' : FRUITS[cell].name}
                 >
-                  <span className="text-xl leading-none">{cell === EMPTY ? '' : FRUITS[cell].emoji}</span>
+                  <span className="text-[15px] [@media(orientation:landscape)_and_(max-width:767px)]:text-lg sm:text-xl leading-none">{cell === EMPTY ? '' : FRUITS[cell].emoji}</span>
                 </button>
               ))
             )}

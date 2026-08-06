@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { CalculatorCategory, CalculatorId, CalculationHistoryItem, CalculationInputState, SaveHistoryFn } from './types';
 import { CALCULATOR_LIST, CALCULATOR_GUIDES } from './data/calculatorInfo';
 import { Header } from './components/Header';
@@ -11,35 +11,49 @@ import { CalculatorGuideCard } from './components/CalculatorGuideCard';
 import { queuePendingHistoryRestore } from './utils/historyRestore';
 
 // Calculators
-import { SalaryCalculator } from './components/calculators/SalaryCalculator';
-import { BmiCalculator } from './components/calculators/BmiCalculator';
-import { BmrCalculator } from './components/calculators/BmrCalculator';
-import { BodyFatCalculator } from './components/calculators/BodyFatCalculator';
-import { IdealWeightCalculator } from './components/calculators/IdealWeightCalculator';
-import { MacroCalculator } from './components/calculators/MacroCalculator';
-import { SmokingQuitCalculator } from './components/calculators/SmokingQuitCalculator';
-import { TdeeCalculator } from './components/calculators/TdeeCalculator';
-import { WaterIntakeCalculator } from './components/calculators/WaterIntakeCalculator';
-import { WhrCalculator } from './components/calculators/WhrCalculator';
-import { SeveranceCalculator } from './components/calculators/SeveranceCalculator';
-import { VatCalculator } from './components/calculators/VatCalculator';
-import { ElectricityCalculator } from './components/calculators/ElectricityCalculator';
-import { ExchangeCalculator } from './components/calculators/ExchangeCalculator';
-import { DateCalculator } from './components/calculators/DateCalculator';
-import { UnitCalculator } from './components/calculators/UnitCalculator';
-import { ScientificCalculator } from './components/calculators/ScientificCalculator';
-import { PercentCalculator } from './components/calculators/PercentCalculator';
-import { LottoCalculator } from './components/calculators/LottoCalculator';
-import { GoldCalculator } from './components/calculators/GoldCalculator';
-import { LoanCalculator } from './components/calculators/LoanCalculator';
-import { HourlyCalculator } from './components/calculators/HourlyCalculator';
-import { CarTaxCalculator } from './components/calculators/CarTaxCalculator';
-import { RealEstateCalculator } from './components/calculators/RealEstateCalculator';
-import { LadderGameCalculator } from './components/calculators/LadderGameCalculator';
-import { GomokuCalculator } from './components/calculators/GomokuCalculator';
-import { WatermelonGameCalculator } from './components/calculators/WatermelonGameCalculator';
-
 import { ShieldCheck, CheckCircle, MessageCircleWarning } from 'lucide-react';
+
+const SalaryCalculator = lazy(() => import('./components/calculators/SalaryCalculator').then((module) => ({ default: module.SalaryCalculator })));
+const BmiCalculator = lazy(() => import('./components/calculators/BmiCalculator').then((module) => ({ default: module.BmiCalculator })));
+const BmrCalculator = lazy(() => import('./components/calculators/BmrCalculator').then((module) => ({ default: module.BmrCalculator })));
+const BodyFatCalculator = lazy(() => import('./components/calculators/BodyFatCalculator').then((module) => ({ default: module.BodyFatCalculator })));
+const IdealWeightCalculator = lazy(() => import('./components/calculators/IdealWeightCalculator').then((module) => ({ default: module.IdealWeightCalculator })));
+const MacroCalculator = lazy(() => import('./components/calculators/MacroCalculator').then((module) => ({ default: module.MacroCalculator })));
+const SmokingQuitCalculator = lazy(() => import('./components/calculators/SmokingQuitCalculator').then((module) => ({ default: module.SmokingQuitCalculator })));
+const TdeeCalculator = lazy(() => import('./components/calculators/TdeeCalculator').then((module) => ({ default: module.TdeeCalculator })));
+const WaterIntakeCalculator = lazy(() => import('./components/calculators/WaterIntakeCalculator').then((module) => ({ default: module.WaterIntakeCalculator })));
+const WhrCalculator = lazy(() => import('./components/calculators/WhrCalculator').then((module) => ({ default: module.WhrCalculator })));
+const SeveranceCalculator = lazy(() => import('./components/calculators/SeveranceCalculator').then((module) => ({ default: module.SeveranceCalculator })));
+const VatCalculator = lazy(() => import('./components/calculators/VatCalculator').then((module) => ({ default: module.VatCalculator })));
+const ElectricityCalculator = lazy(() => import('./components/calculators/ElectricityCalculator').then((module) => ({ default: module.ElectricityCalculator })));
+const ExchangeCalculator = lazy(() => import('./components/calculators/ExchangeCalculator').then((module) => ({ default: module.ExchangeCalculator })));
+const DateCalculator = lazy(() => import('./components/calculators/DateCalculator').then((module) => ({ default: module.DateCalculator })));
+const UnitCalculator = lazy(() => import('./components/calculators/UnitCalculator').then((module) => ({ default: module.UnitCalculator })));
+const ScientificCalculator = lazy(() => import('./components/calculators/ScientificCalculator').then((module) => ({ default: module.ScientificCalculator })));
+const PercentCalculator = lazy(() => import('./components/calculators/PercentCalculator').then((module) => ({ default: module.PercentCalculator })));
+const LottoCalculator = lazy(() => import('./components/calculators/LottoCalculator').then((module) => ({ default: module.LottoCalculator })));
+const GoldCalculator = lazy(() => import('./components/calculators/GoldCalculator').then((module) => ({ default: module.GoldCalculator })));
+const LoanCalculator = lazy(() => import('./components/calculators/LoanCalculator').then((module) => ({ default: module.LoanCalculator })));
+const HourlyCalculator = lazy(() => import('./components/calculators/HourlyCalculator').then((module) => ({ default: module.HourlyCalculator })));
+const CarTaxCalculator = lazy(() => import('./components/calculators/CarTaxCalculator').then((module) => ({ default: module.CarTaxCalculator })));
+const RealEstateCalculator = lazy(() => import('./components/calculators/RealEstateCalculator').then((module) => ({ default: module.RealEstateCalculator })));
+const LadderGameCalculator = lazy(() => import('./components/calculators/LadderGameCalculator').then((module) => ({ default: module.LadderGameCalculator })));
+const GomokuCalculator = lazy(() => import('./components/calculators/GomokuCalculator').then((module) => ({ default: module.GomokuCalculator })));
+const WatermelonGameCalculator = lazy(() => import('./components/calculators/WatermelonGameCalculator').then((module) => ({ default: module.WatermelonGameCalculator })));
+
+const calculatorLoadingFallback = (
+  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
+    <div className="animate-pulse space-y-4">
+      <div className="h-5 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+      <div className="h-4 w-52 rounded bg-slate-100 dark:bg-slate-800/80" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="h-24 rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+        <div className="h-24 rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+      </div>
+      <div className="h-72 rounded-xl bg-slate-100 dark:bg-slate-800/80" />
+    </div>
+  </div>
+);
 
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
@@ -289,7 +303,9 @@ export default function App() {
 
           {/* Active Calculator Widget Area */}
           <section className="scroll-mt-24" id="calculator-widget">
-            <div key={`${activeCalcId}-${calculatorRenderNonce}`}>{renderCalculator()}</div>
+            <Suspense fallback={calculatorLoadingFallback}>
+              <div key={`${activeCalcId}-${calculatorRenderNonce}`}>{renderCalculator()}</div>
+            </Suspense>
           </section>
 
           {/* Middle Content AdSense Banner */}
@@ -317,12 +333,13 @@ export default function App() {
       {/* Sticky quick contact CTA */}
       <button
         onClick={() => setLegalModalType('contact')}
-        className="fixed bottom-5 right-4 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-4 py-3 sm:px-5 sm:py-3 text-sm sm:text-base font-extrabold shadow-xl shadow-rose-900/30 transition-colors"
+        className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-40 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white px-3 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-base font-extrabold shadow-xl shadow-rose-900/30 transition-colors"
         aria-label="1:1문의 및 제보하기"
         title="1:1문의 및 제보하기"
       >
         <MessageCircleWarning className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span>1:1문의 및 제보</span>
+        <span className="sm:hidden">문의</span>
+        <span className="hidden sm:inline">1:1문의 및 제보</span>
       </button>
 
       {/* Legal & Terms Modals */}
