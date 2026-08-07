@@ -9,7 +9,7 @@ export const onRequestGet = async () => {
     'User-agent: *',
     'Allow: /',
     '',
-    'Sitemap: https://smart-toolkit.com/sitemap.xml',
+    'Sitemap: https://www.smart-toolkit.com/sitemap.xml',
   ].join('\n');
 
   return new Response(body, {

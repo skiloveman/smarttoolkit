@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
+    "generate:rss": "tsx scripts/generate-rss.ts",
+    "prebuild": "tsx scripts/generate-rss.ts",
     "build": "vite build",
     "deploy": "node ./scripts/deploy-pages.mjs",
     "preview": "vite preview",
