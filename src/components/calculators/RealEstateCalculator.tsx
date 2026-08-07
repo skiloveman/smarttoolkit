@@ -151,7 +151,7 @@ export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • 상한 중개보수: ${formatKrw(rawFee)}
 • 부가가치세(10%): ${formatKrw(vatFee)}
 ➔ 총 지불 중개수수료: ${formatKrw(totalBrokerageFee)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
     } else {
       text = `[부동산 취득세 계산]
 • 건물 종류: ${propMap[propertyType]} (${houseCount}주택자)
@@ -161,7 +161,7 @@ export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • 취득세: ${formatKrw(acqTaxAmount)}
 • 지방교육세: ${formatKrw(localEduTax)}
 ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}➔ 총 세금 합계액: ${formatKrw(totalAcquisitionTax)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
     }
 
     navigator.clipboard.writeText(text);

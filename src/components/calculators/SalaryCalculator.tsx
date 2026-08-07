@@ -80,7 +80,7 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   - 고용보험: ${formatKrw(result.employmentInsurance)}
   - 근로소득세: ${formatKrw(result.incomeTax)}
   - 지방소득세: ${formatKrw(result.localIncomeTax)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

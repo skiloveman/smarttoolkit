@@ -47,7 +47,7 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • BMI 수치: ${result.bmi} (판정: ${result.status})
 • 정상 체중 범위: ${result.idealWeightMin}kg ~ ${result.idealWeightMax}kg
 • 권장 유지 수칙: ${result.healthTip}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

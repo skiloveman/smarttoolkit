@@ -45,7 +45,7 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const text = `[퍼센트 & 할인율 계산]
 • ${formatKrw(originalPrice)}에서 ${discountPercent}% 할인 ➔ 최종가격: ${formatKrw(finalPrice)} (할인액: ${formatKrw(discountAmount)})
 • ${formatNum(baseVal)}의 ${ratioVal}% ➔ ${formatNum(ratioResult)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

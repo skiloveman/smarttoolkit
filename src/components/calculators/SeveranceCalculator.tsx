@@ -68,7 +68,7 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   - 3개월 기본급 합계: ${formatKrw(result.threeMonthSalaryTotal)}
   - 상여금 가산분(3/12): ${formatKrw(result.bonusForThreeMonths)}
   - 연차수당 가산분(3/12): ${formatKrw(result.leavePayForThreeMonths)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

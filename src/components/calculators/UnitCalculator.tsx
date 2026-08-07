@@ -11,7 +11,7 @@ interface Props {
 
 export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
-  const [unitType, setUnitType] = useState<'pyung' | 'length' | 'weight' | 'temp'>('pyung');
+  const [unitType, setUnitType] = useState<'pyung' | 'length' | 'weight'>('pyung');
   const [inputValue, setInputValue] = useState<number>(34); // 34평 default (84㎡)
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -29,7 +29,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const lbVal = Number((inputValue * 2.20462).toFixed(2));
 
   usePendingHistoryRestore<{
-    unitType: 'pyung' | 'length' | 'weight' | 'temp';
+    unitType: 'pyung' | 'length' | 'weight';
     inputValue: number;
   }>('unit', (restored) => {
     setUnitType(restored.unitType);

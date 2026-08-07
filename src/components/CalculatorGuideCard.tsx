@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GuideArticle } from '../data/calculatorInfo';
-import { BookOpen, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, HelpCircle, CheckCircle2, ShieldAlert, Lightbulb } from 'lucide-react';
 
 interface Props {
   guide: GuideArticle;
@@ -45,6 +45,24 @@ export const CalculatorGuideCard: React.FC<Props> = ({ guide }) => {
           ))}
         </ul>
       </div>
+
+      {/* 활용 예시 */}
+      {guide.examples && guide.examples.length > 0 && (
+        <div className="mb-8">
+          <h4 className="text-xs font-bold text-gray-800 dark:text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Lightbulb className="w-4 h-4 text-amber-500" />
+            <span>활용 예시</span>
+          </h4>
+          <ul className="space-y-2">
+            {guide.examples.map((example, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-xs text-gray-600 dark:text-slate-300 leading-normal">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                <span>{example}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* 자주 묻는 질문 FAQ */}
       {guide.faqs && guide.faqs.length > 0 && (

@@ -122,7 +122,7 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const lines = games
       .slice(0, gameCount)
       .map((g, idx) => `[${labels[idx]}조합] ${g.map((n) => (n < 10 ? `0${n}` : `${n}`)).join(', ')}`);
-    const text = `[로또6/45 자동추출 번호]\n${lines.join('\n')}\n- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+    const text = `[로또6/45 자동추출 번호]\n${lines.join('\n')}\n- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

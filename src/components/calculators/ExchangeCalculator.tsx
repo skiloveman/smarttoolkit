@@ -57,7 +57,7 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const text = `[환율 계산 결과]
 • 환산 기준: ${fromCurr.flag} ${amount} ${fromCode} ➔ ${toCurr.flag} ${result.convertedAmount} ${toCode}
 • 적용 환율: 1 ${fromCode} = ${result.appliedRate} ${toCode}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

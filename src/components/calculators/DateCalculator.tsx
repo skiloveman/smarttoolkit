@@ -59,7 +59,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       ddayResult === 0 ? 'D-Day 오늘!' : ddayResult > 0 ? `D-${ddayResult}` : `D+${Math.abs(ddayResult)}`
     }
 • 기준일(${baseDate})로부터 ${addDays}일 후: ${addedDateResult}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

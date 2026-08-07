@@ -95,7 +95,7 @@ export const GoldCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • 금 원자재 가치: ${formatKrw(pureMetalCost)}
 ${tradeMode === 'buy' ? `• 세공비/공임: ${formatKrw(finalLaborFee)}\n• 부가가치세(10%): ${formatKrw(vatAmount)}` : `• 매입 감가 할인: -${formatKrw(sellingMarginDiscount)}`}
 ➔ 최종 ${tradeMode === 'buy' ? '구매' : '판매'} 예상 금액: ${formatKrw(finalTotalPrice)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

@@ -85,14 +85,14 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • 세액 산정: 기본 세액 ${formatKrw(discountedBaseTax)} + 지방교육세(30%) ${formatKrw(localEducationTax)}
 • 연간 총 자동차세: ${formatKrw(totalAnnualCarTax)} (반기별 ${formatKrw(Math.round(totalAnnualCarTax / 2))})
 • 1월 연납(선납) 시: ${formatKrw(janPrepaymentTax)} (절감 혜택: -${formatKrw(prepaymentSavings)})
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
     } else {
       text = `[차량 유류비 계산 결과]
 • 주행거리: 연간 ${formatNum(annualDistanceKm)}km (월 약 ${formatNum(Math.round(annualDistanceKm / 12))}km)
 • 연비: ${fuelEfficiency} km/L | 유류 단가: ${formatKrw(fuelPricePerLiter)}/L
 • 연간 예상 유류비: ${formatKrw(annualFuelCost)}
 • 월 평균 예상 유류비: ${formatKrw(monthlyFuelCost)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
     }
 
     navigator.clipboard.writeText(text);

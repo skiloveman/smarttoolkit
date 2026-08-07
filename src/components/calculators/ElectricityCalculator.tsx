@@ -49,7 +49,7 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   - 연료비조정액: ${formatKrw(result.fuelAdjustmentCharge)}
   - 부가가치세(10%): ${formatKrw(result.vat)}
   - 전력산업기반기금(3.7%): ${formatKrw(result.powerFund)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

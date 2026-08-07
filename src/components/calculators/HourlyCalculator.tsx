@@ -83,7 +83,7 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   - 연장/야간 수당: ${formatKrw(Math.round(weeklyOvertimeWage * WEEKS_PER_MONTH))}
 • 공제 (${deductionLabel}): -${formatKrw(deductionAmount)}
 ➔ 최종 실수령 월급: ${formatKrw(netMonthlyWage)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);

@@ -127,7 +127,7 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 • 첫달 월 상환액: ${formatKrw(firstMonthPayment)}
 • 총 대출 이자: ${formatKrw(totalInterest)}
 • 총 상환금액 (원금+이자): ${formatKrw(totalRepayment)}
-- 생활 계산기 (https://ais-dev-mqxu6js2rqs5gficbwuedy-53763444336.asia-northeast1.run.app)`;
+- 생활 계산기 (https://www.smart-toolkit.com)`;
 
     navigator.clipboard.writeText(text);
     setCopied(true);
