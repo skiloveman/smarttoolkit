@@ -28,6 +28,20 @@ const BOTTOM_PADDING = 28;
 const ANIMATION_DURATION_MS = 5600;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const LANE_COLORS = [
+  '#3b82f6',
+  '#f43f5e',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#06b6d4',
+  '#f97316',
+  '#ec4899',
+  '#84cc16',
+  '#6366f1',
+];
+const laneColor = (lane: number) => LANE_COLORS[lane % LANE_COLORS.length];
 const getHorizontalPadding = (laneCount: number) => {
   const basePadding = 34 - (laneCount - 4) * 2.8;
   if (laneCount >= 8) {
@@ -674,9 +688,12 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     tokenPositions.forEach((token) => {
       ctx.beginPath();
       ctx.arc(token.point.x, token.point.y, 11, 0, Math.PI * 2);
-      ctx.fillStyle = '#0f172a';
-      ctx.fill();
       ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = laneColor(token.laneIndex);
+      ctx.stroke();
+      ctx.fillStyle = '#0f172a';
       ctx.font = '700 10px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -778,10 +795,9 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">사다리</h4>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="rounded-2xl border border-slate-800 bg-black p-4 overflow-x-hidden">
+        <div className="flex items-center justify-end mb-2 px-1">
+          <span className="text-[11px] text-slate-300">
             {activeStartLane !== null
               ? `${names[activeStartLane]} 진행 중...`
               : runData
@@ -791,7 +807,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div className="w-full max-w-[720px] mx-auto">
-          <div className="relative mb-2 h-5 overflow-hidden">
+          <div className="relative mb-3 h-9 overflow-visible">
             {Array.from({ length: laneCount }, (_, i) => {
               const done = revealedStartLanes[i] ?? false;
               const isActive = activeStartLane === i;
@@ -802,16 +818,20 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   disabled={!runData || isAnimating || done}
                   onClick={() => startSingleLaneAnimation(i)}
                   title={runData && !done ? `${names[i]} 내려보기` : undefined}
-                  className={`absolute -translate-x-1/2 text-center text-xs font-bold truncate transition-colors disabled:cursor-default ${
+                  className={`absolute -translate-x-1/2 rounded-full px-3 py-1.5 text-[11px] font-bold text-white text-center shadow-sm truncate transition-all disabled:cursor-default ${
                     isActive
-                      ? 'text-blue-600 dark:text-blue-400'
+                      ? 'ring-2 ring-white scale-105'
                       : done
-                      ? 'text-emerald-600 dark:text-emerald-400'
+                      ? 'opacity-55'
                       : runData
-                      ? 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'
-                      : 'text-slate-700 dark:text-slate-300 cursor-default'
+                      ? 'hover:brightness-110 hover:-translate-y-0.5 cursor-pointer'
+                      : 'opacity-70 cursor-default'
                   }`}
-                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
+                  style={{
+                    left: `${laneLeftPercents[i]}%`,
+                    width: `${Math.max(56, Math.floor(560 / laneCount))}px`,
+                    backgroundColor: laneColor(i),
+                  }}
                 >
                   {names[i]}
                   {done ? ' ✓' : ''}
@@ -824,7 +844,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             ref={canvasRef}
             width={LADDER_WIDTH}
             height={LADDER_HEIGHT}
-            className="w-full h-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+            className="w-full h-auto rounded-xl bg-black"
           />
 
           <div className="relative mt-2 h-8 overflow-hidden">
