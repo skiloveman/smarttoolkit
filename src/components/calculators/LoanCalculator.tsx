@@ -14,9 +14,13 @@ type RepaymentType = 'equalPrincipalInterest' | 'equalPrincipal' | 'bullet'; // 
 export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [loanAmount, setLoanAmount] = useState<number>(100000000); // 1억 원
+  const [loanAmountText, setLoanAmountText] = useState('100000000');
   const [annualRate, setAnnualRate] = useState<number>(4.5); // 4.5%
+  const [annualRateText, setAnnualRateText] = useState('4.5');
   const [termMonths, setTermMonths] = useState<number>(36); // 36개월 (3년)
+  const [termMonthsText, setTermMonthsText] = useState('36');
   const [graceMonths, setGraceMonths] = useState<number>(0); // 거치기간 0개월
+  const [graceMonthsText, setGraceMonthsText] = useState('0');
   const [repaymentType, setRepaymentType] = useState<RepaymentType>('equalPrincipalInterest');
 
   const [showSchedule, setShowSchedule] = useState<boolean>(false);
@@ -104,9 +108,13 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     repaymentType: RepaymentType;
   }>('loan', (restored) => {
     setLoanAmount(restored.loanAmount);
+    setLoanAmountText(String(restored.loanAmount));
     setAnnualRate(restored.annualRate);
+    setAnnualRateText(String(restored.annualRate));
     setTermMonths(restored.termMonths);
+    setTermMonthsText(String(restored.termMonths));
     setGraceMonths(restored.graceMonths);
+    setGraceMonthsText(String(restored.graceMonths));
     setRepaymentType(restored.repaymentType);
   });
 
@@ -213,16 +221,23 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <DefaultValueInput
               type="number"
               step="1000000"
-              value={loanAmount}
+              value={loanAmountText}
               defaultValueLabel={100000000}
-              onValueChange={(value) => setLoanAmount(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setLoanAmountText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setLoanAmount(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[10000000, 30000000, 50000000, 100000000, 300000000].map((amt) => (
                 <button
                   key={amt}
-                  onClick={() => setLoanAmount(amt)}
+                  onClick={() => {
+                    setLoanAmount(amt);
+                    setLoanAmountText(String(amt));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                     loanAmount === amt ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                   }`}
@@ -242,9 +257,13 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="0.1"
-                value={annualRate}
+                value={annualRateText}
                 defaultValueLabel={4.5}
-                onValueChange={(value) => setAnnualRate(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setAnnualRateText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAnnualRate(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -255,9 +274,13 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="12"
-                value={termMonths}
+                value={termMonthsText}
                 defaultValueLabel={36}
-                onValueChange={(value) => setTermMonths(Math.max(1, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setTermMonthsText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setTermMonths(Math.max(1, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -267,7 +290,10 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             {[12, 24, 36, 60, 120, 240, 360].map((m) => (
               <button
                 key={m}
-                onClick={() => setTermMonths(m)}
+                onClick={() => {
+                  setTermMonths(m);
+                  setTermMonthsText(String(m));
+                }}
                 className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                   termMonths === m ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                 }`}
@@ -284,9 +310,13 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={graceMonths}
+              value={graceMonthsText}
               defaultValueLabel={0}
-              onValueChange={(value) => setGraceMonths(Math.min(termMonths - 1, Math.max(0, Number(value) || 0)))}
+              onValueChange={(value) => {
+                setGraceMonthsText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setGraceMonths(Math.min(termMonths - 1, Math.max(0, n)));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

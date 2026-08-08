@@ -20,6 +20,7 @@ type MacroPlan = keyof typeof macroPlans;
 export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [dailyCalories, setDailyCalories] = useState(2200);
+  const [dailyCaloriesText, setDailyCaloriesText] = useState('2200');
   const [plan, setPlan] = useState<MacroPlan>('balanced');
   const [saved, setSaved] = useState(false);
 
@@ -42,6 +43,7 @@ export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     plan: MacroPlan;
   }>('macro', (restored) => {
     setDailyCalories(restored.dailyCalories);
+    setDailyCaloriesText(String(restored.dailyCalories));
     setPlan(restored.plan);
   });
 
@@ -73,7 +75,24 @@ export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       <div className="space-y-3">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 총 칼로리 (kcal)</label>
-          <DefaultValueInput type="number" value={dailyCalories} defaultValueLabel={2200} onValueChange={(value) => setDailyCalories(Number(value) || 0)} onBlur={() => setDailyCalories((prev) => Math.max(800, Math.min(6000, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <DefaultValueInput
+            type="number"
+            value={dailyCaloriesText}
+            defaultValueLabel={2200}
+            onValueChange={(value) => {
+              setDailyCaloriesText(value);
+              const n = Number(value);
+              if (value.trim() !== '' && !Number.isNaN(n)) setDailyCalories(n);
+            }}
+            onBlur={() =>
+              setDailyCalories((prev) => {
+                const clamped = Math.max(800, Math.min(6000, prev || 0));
+                setDailyCaloriesText(String(clamped));
+                return clamped;
+              })
+            }
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
+          />
         </div>
 
         <div>

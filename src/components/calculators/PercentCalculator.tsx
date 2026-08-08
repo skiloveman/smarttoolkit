@@ -13,11 +13,14 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   // Discount Calculator
   const [originalPrice, setOriginalPrice] = useState<number>(50000);
+  const [originalPriceText, setOriginalPriceText] = useState('50000');
   const [discountPercent, setDiscountPercent] = useState<number>(20);
 
   // Percent Ratio Calculator
   const [baseVal, setBaseVal] = useState<number>(100000);
+  const [baseValText, setBaseValText] = useState('100000');
   const [ratioVal, setRatioVal] = useState<number>(15);
+  const [ratioValText, setRatioValText] = useState('15');
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -29,9 +32,12 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     ratioVal: number;
   }>('percent', (restored) => {
     setOriginalPrice(restored.originalPrice);
+    setOriginalPriceText(String(restored.originalPrice));
     setDiscountPercent(restored.discountPercent);
     setBaseVal(restored.baseVal);
+    setBaseValText(String(restored.baseVal));
     setRatioVal(restored.ratioVal);
+    setRatioValText(String(restored.ratioVal));
   });
 
   // Discount Math
@@ -87,9 +93,13 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <DefaultValueInput
             type="number"
             step="1000"
-            value={originalPrice}
+            value={originalPriceText}
             defaultValueLabel={50000}
-            onValueChange={(value) => setOriginalPrice(Math.max(0, Number(value) || 0))}
+            onValueChange={(value) => {
+              setOriginalPriceText(value);
+              const n = Number(value);
+              if (value.trim() !== '' && !Number.isNaN(n)) setOriginalPrice(Math.max(0, n));
+            }}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
           />
         </div>
@@ -149,9 +159,13 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={baseVal}
+              value={baseValText}
               defaultValueLabel={100000}
-              onValueChange={(value) => setBaseVal(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setBaseValText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setBaseVal(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -162,9 +176,13 @@ export const PercentCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={ratioVal}
+              value={ratioValText}
               defaultValueLabel={15}
-              onValueChange={(value) => setRatioVal(Number(value) || 0)}
+              onValueChange={(value) => {
+                setRatioValText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setRatioVal(n);
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

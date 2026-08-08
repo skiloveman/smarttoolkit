@@ -19,6 +19,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   // Tab 2: Date math
   const [baseDate, setBaseDate] = useState(todayStr);
   const [addDays, setAddDays] = useState(100);
+  const [addDaysText, setAddDaysText] = useState('100');
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -31,6 +32,7 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setTargetDate(restored.targetDate);
     setBaseDate(restored.baseDate);
     setAddDays(restored.addDays);
+    setAddDaysText(String(restored.addDays));
   });
 
   // D-day calculation
@@ -153,9 +155,13 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={addDays}
+              value={addDaysText}
               defaultValueLabel={100}
-              onValueChange={(value) => setAddDays(Number(value) || 0)}
+              onValueChange={(value) => {
+                setAddDaysText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setAddDays(n);
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -166,7 +172,10 @@ export const DateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           {[50, 100, 200, 300, 365].map((d) => (
             <button
               key={d}
-              onClick={() => setAddDays(d)}
+              onClick={() => {
+                setAddDays(d);
+                setAddDaysText(String(d));
+              }}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                 addDays === d ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
               }`}

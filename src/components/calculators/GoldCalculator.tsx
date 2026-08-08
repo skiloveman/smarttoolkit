@@ -15,10 +15,13 @@ export const GoldCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [goldType, setGoldType] = useState<'24k' | '18k' | '14k' | 'platinum' | 'silver'>('24k');
   const [weightUnit, setWeightUnit] = useState<'don' | 'gram' | 'nyang' | 'oz'>('don');
   const [weightVal, setWeightVal] = useState<number>(1); // default 1돈
+  const [weightValText, setWeightValText] = useState('1');
 
   // Standard 24K Market Price per 1 don (3.75g) in KRW
   const [ratePerDon, setRatePerDon] = useState<number>(450000);
+  const [ratePerDonText, setRatePerDonText] = useState('450000');
   const [laborFee, setLaborFee] = useState<number>(30000); // 세공비 (살 때)
+  const [laborFeeText, setLaborFeeText] = useState('30000');
   const [includeVat, setIncludeVat] = useState<boolean>(true); // 부가세 10% (살 때)
 
   const [copied, setCopied] = useState<boolean>(false);
@@ -37,8 +40,11 @@ export const GoldCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setGoldType(restored.goldType);
     setWeightUnit(restored.weightUnit);
     setWeightVal(restored.weightVal);
+    setWeightValText(String(restored.weightVal));
     setRatePerDon(restored.ratePerDon);
+    setRatePerDonText(String(restored.ratePerDon));
     setLaborFee(restored.laborFee);
+    setLaborFeeText(String(restored.laborFee));
     setIncludeVat(restored.includeVat);
   });
 
@@ -207,16 +213,23 @@ ${tradeMode === 'buy' ? `• 세공비/공임: ${formatKrw(finalLaborFee)}\n• 
             <DefaultValueInput
               type="number"
               step="5000"
-              value={ratePerDon}
+              value={ratePerDonText}
               defaultValueLabel={450000}
-              onValueChange={(value) => setRatePerDon(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setRatePerDonText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setRatePerDon(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[430000, 440000, 450000, 460000, 470000].map((r) => (
                 <button
                   key={r}
-                  onClick={() => setRatePerDon(r)}
+                  onClick={() => {
+                    setRatePerDon(r);
+                    setRatePerDonText(String(r));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                     ratePerDon === r ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
                   }`}
@@ -259,9 +272,13 @@ ${tradeMode === 'buy' ? `• 세공비/공임: ${formatKrw(finalLaborFee)}\n• 
               <DefaultValueInput
                 type="number"
                 step="0.1"
-                value={weightVal}
+                value={weightValText}
                 defaultValueLabel={1}
-                onValueChange={(value) => setWeightVal(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setWeightValText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setWeightVal(Math.max(0, n));
+                }}
                 className="flex-1 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-black text-slate-800 dark:text-slate-200"
               />
               <div className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center justify-center">
@@ -276,6 +293,7 @@ ${tradeMode === 'buy' ? `• 세공비/공임: ${formatKrw(finalLaborFee)}\n• 
                   onClick={() => {
                     setWeightUnit('don');
                     setWeightVal(w);
+                    setWeightValText(String(w));
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                     weightUnit === 'don' && weightVal === w
@@ -299,9 +317,13 @@ ${tradeMode === 'buy' ? `• 세공비/공임: ${formatKrw(finalLaborFee)}\n• 
                 <DefaultValueInput
                   type="number"
                   step="5000"
-                  value={laborFee}
+                  value={laborFeeText}
                   defaultValueLabel={30000}
-                  onValueChange={(value) => setLaborFee(Math.max(0, Number(value) || 0))}
+                  onValueChange={(value) => {
+                    setLaborFeeText(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setLaborFee(Math.max(0, n));
+                  }}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
                 />
               </div>

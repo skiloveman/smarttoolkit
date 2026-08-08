@@ -14,7 +14,9 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [fromCode, setFromCode] = useState<string>('USD');
   const [toCode, setToCode] = useState<string>('KRW');
   const [amount, setAmount] = useState<number>(100);
+  const [amountText, setAmountText] = useState('100');
   const [customRate, setCustomRate] = useState<number | undefined>(undefined);
+  const [customRateText, setCustomRateText] = useState('');
   const [isEditingRate, setIsEditingRate] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -44,7 +46,9 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setFromCode(restored.fromCode);
     setToCode(restored.toCode);
     setAmount(restored.amount);
+    setAmountText(String(restored.amount));
     setCustomRate(restored.customRate ?? undefined);
+    setCustomRateText(restored.customRate != null ? String(restored.customRate) : '');
     setIsEditingRate(restored.isEditingRate);
   });
 
@@ -156,9 +160,13 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="relative">
               <DefaultValueInput
                 type="number"
-                value={amount}
+                value={amountText}
                 defaultValueLabel={100}
-                onValueChange={(value) => setAmount(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setAmountText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAmount(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
               />
               <span className="absolute right-4 top-3.5 text-sm font-bold text-slate-400">
@@ -171,7 +179,10 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {[10, 50, 100, 500, 1000, 5000].map((val) => (
                 <button
                   key={val}
-                  onClick={() => setAmount(val)}
+                  onClick={() => {
+                    setAmount(val);
+                    setAmountText(String(val));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                     amount === val
                       ? 'bg-indigo-600 text-white font-semibold'
@@ -198,6 +209,7 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   setIsEditingRate(e.target.checked);
                   if (e.target.checked && !customRate) {
                     setCustomRate(result.appliedRate);
+                    setCustomRateText(String(result.appliedRate));
                   }
                 }}
                 className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
@@ -208,9 +220,13 @@ export const ExchangeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="0.01"
-                  value={customRate ?? result.appliedRate}
+                  value={customRateText || String(customRate ?? result.appliedRate)}
                   defaultValueLabel={result.appliedRate}
-                  onValueChange={(value) => setCustomRate(Number(value) || 0)}
+                  onValueChange={(value) => {
+                    setCustomRateText(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setCustomRate(n);
+                  }}
                   className="w-40 rounded-lg border border-slate-300 dark:border-slate-700 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
                 />
                 <span className="text-xs text-slate-500">

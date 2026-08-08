@@ -44,8 +44,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     return formatYmd(d);
   });
   const [cigsPerDay, setCigsPerDay] = useState<number>(20);
+  const [cigsPerDayText, setCigsPerDayText] = useState('20');
   const [packPrice, setPackPrice] = useState<number>(4500);
+  const [packPriceText, setPackPriceText] = useState('4500');
   const [cigsPerPack, setCigsPerPack] = useState<number>(20);
+  const [cigsPerPackText, setCigsPerPackText] = useState('20');
   const [saved, setSaved] = useState(false);
 
   const result = useMemo(() => {
@@ -81,8 +84,11 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setQuitDate(restored.quitDate);
     setEndDate(restored.endDate);
     setCigsPerDay(restored.cigsPerDay);
+    setCigsPerDayText(String(restored.cigsPerDay));
     setPackPrice(restored.packPrice);
+    setPackPriceText(String(restored.packPrice));
     setCigsPerPack(restored.cigsPerPack);
+    setCigsPerPackText(String(restored.cigsPerPack));
   });
 
   const handleSave = () => {
@@ -155,10 +161,20 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 흡연량 (개비)</label>
           <DefaultValueInput
             type="number"
-            value={cigsPerDay}
+            value={cigsPerDayText}
             defaultValueLabel={20}
-            onValueChange={(value) => setCigsPerDay(Number(value) || 0)}
-            onBlur={() => setCigsPerDay((prev) => Math.max(0, Math.min(100, prev || 0)))}
+            onValueChange={(value) => {
+              setCigsPerDayText(value);
+              const n = Number(value);
+              if (value.trim() !== '' && !Number.isNaN(n)) setCigsPerDay(n);
+            }}
+            onBlur={() =>
+              setCigsPerDay((prev) => {
+                const clamped = Math.max(0, Math.min(100, prev || 0));
+                setCigsPerDayText(String(clamped));
+                return clamped;
+              })
+            }
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
         </div>
@@ -167,10 +183,20 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">담배 1갑 가격 (원)</label>
           <DefaultValueInput
             type="number"
-            value={packPrice}
+            value={packPriceText}
             defaultValueLabel={4500}
-            onValueChange={(value) => setPackPrice(Number(value) || 0)}
-            onBlur={() => setPackPrice((prev) => Math.max(0, Math.min(50000, prev || 0)))}
+            onValueChange={(value) => {
+              setPackPriceText(value);
+              const n = Number(value);
+              if (value.trim() !== '' && !Number.isNaN(n)) setPackPrice(n);
+            }}
+            onBlur={() =>
+              setPackPrice((prev) => {
+                const clamped = Math.max(0, Math.min(50000, prev || 0));
+                setPackPriceText(String(clamped));
+                return clamped;
+              })
+            }
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
         </div>
@@ -179,10 +205,20 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">1갑당 개비 수</label>
           <DefaultValueInput
             type="number"
-            value={cigsPerPack}
+            value={cigsPerPackText}
             defaultValueLabel={20}
-            onValueChange={(value) => setCigsPerPack(Number(value) || 0)}
-            onBlur={() => setCigsPerPack((prev) => Math.max(1, Math.min(40, prev || 1)))}
+            onValueChange={(value) => {
+              setCigsPerPackText(value);
+              const n = Number(value);
+              if (value.trim() !== '' && !Number.isNaN(n)) setCigsPerPack(n);
+            }}
+            onBlur={() =>
+              setCigsPerPack((prev) => {
+                const clamped = Math.max(1, Math.min(40, prev || 1));
+                setCigsPerPackText(String(clamped));
+                return clamped;
+              })
+            }
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
           />
         </div>

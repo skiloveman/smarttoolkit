@@ -20,7 +20,9 @@ export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   // Amount Inputs
   const [price, setPrice] = useState<number>(500000000); // 5억 원
+  const [priceText, setPriceText] = useState('500000000');
   const [monthlyRent, setMonthlyRent] = useState<number>(500000); // 월세 50만 원
+  const [monthlyRentText, setMonthlyRentText] = useState('500000');
 
   // Tax Option Inputs
   const [houseCount, setHouseCount] = useState<number>(1); // 1주택자
@@ -132,7 +134,9 @@ export const RealEstateCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setPropertyType(restored.propertyType);
     setTradeType(restored.tradeType);
     setPrice(restored.price);
+    setPriceText(String(restored.price));
     setMonthlyRent(restored.monthlyRent);
+    setMonthlyRentText(String(restored.monthlyRent));
     setHouseCount(restored.houseCount);
     setAreaOver85(restored.areaOver85);
   });
@@ -326,16 +330,23 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
             <DefaultValueInput
               type="number"
               step="10000000"
-              value={price}
+              value={priceText}
               defaultValueLabel={500000000}
-              onValueChange={(value) => setPrice(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setPriceText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setPrice(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[100000000, 300000000, 500000000, 800000000, 1200000000].map((amt) => (
                 <button
                   key={amt}
-                  onClick={() => setPrice(amt)}
+                  onClick={() => {
+                    setPrice(amt);
+                    setPriceText(String(amt));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                     price === amt ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                   }`}
@@ -356,9 +367,13 @@ ${areaOver85 ? `• 농어촌특별세: ${formatKrw(ruralSpecialTax)}\n` : ''}�
               <DefaultValueInput
                 type="number"
                 step="50000"
-                value={monthlyRent}
+                value={monthlyRentText}
                 defaultValueLabel={500000}
-                onValueChange={(value) => setMonthlyRent(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setMonthlyRentText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setMonthlyRent(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-sm font-bold text-slate-800 dark:text-slate-200"
               />
             </div>

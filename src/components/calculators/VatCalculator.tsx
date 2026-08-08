@@ -13,7 +13,9 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [mode, setMode] = useState<'fromSupply' | 'fromTotal'>('fromSupply');
   const [amount, setAmount] = useState<number>(1000000); // 1,000,000 KRW default
+  const [amountText, setAmountText] = useState('1000000');
   const [vatRate, setVatRate] = useState<number>(10);
+  const [vatRateText, setVatRateText] = useState('10');
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -35,7 +37,9 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   }>('vat', (restored) => {
     setMode(restored.mode);
     setAmount(restored.amount);
+    setAmountText(String(restored.amount));
     setVatRate(restored.vatRate);
+    setVatRateText(String(restored.vatRate));
   });
 
   const copyToClipboard = (text: string, fieldName: string) => {
@@ -104,9 +108,13 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="10000"
-                value={amount}
+                value={amountText}
                 defaultValueLabel={1000000}
-                onValueChange={(value) => setAmount(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setAmountText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAmount(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-lg font-black text-slate-900 dark:text-slate-100 focus:outline-none pr-12"
               />
               <span className="absolute right-4 top-4 text-xs font-semibold text-slate-400">원</span>
@@ -117,7 +125,10 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {presets.map((val) => (
                 <button
                   key={val}
-                  onClick={() => setAmount(val)}
+                  onClick={() => {
+                    setAmount(val);
+                    setAmountText(String(val));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                     amount === val
                       ? 'bg-blue-600 text-white font-semibold'
@@ -136,9 +147,13 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={vatRate}
+              value={vatRateText}
               defaultValueLabel={10}
-              onValueChange={(value) => setVatRate(Number(value) || 0)}
+              onValueChange={(value) => {
+                setVatRateText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setVatRate(n);
+              }}
               className="w-24 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
             />
           </div>

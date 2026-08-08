@@ -14,6 +14,7 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [contractType, setContractType] = useState<'lowVoltage' | 'highVoltage'>('lowVoltage');
   const [season, setSeason] = useState<'summer' | 'other'>('other');
   const [usageKwh, setUsageKwh] = useState<number>(320); // 320 kWh default
+  const [usageKwhText, setUsageKwhText] = useState('320');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -36,6 +37,7 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setContractType(restored.contractType);
     setSeason(restored.season);
     setUsageKwh(restored.usageKwh);
+    setUsageKwhText(String(restored.usageKwh));
   });
 
   const handleCopy = () => {
@@ -157,9 +159,13 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div className="flex items-center gap-1">
                 <DefaultValueInput
                   type="number"
-                  value={usageKwh}
+                  value={usageKwhText}
                   defaultValueLabel={320}
-                  onValueChange={(value) => setUsageKwh(Math.max(0, Number(value) || 0))}
+                  onValueChange={(value) => {
+                    setUsageKwhText(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setUsageKwh(Math.max(0, n));
+                  }}
                   className="w-24 rounded-lg border border-slate-300 dark:border-slate-700 px-2 py-1 text-right text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none"
                 />
                 <span className="text-xs font-bold text-slate-500">kWh</span>
@@ -171,7 +177,10 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               min="0"
               max={maxRange}
               value={usageKwh}
-              onChange={(e) => setUsageKwh(Number(e.target.value))}
+              onChange={(e) => {
+                setUsageKwh(Number(e.target.value));
+                setUsageKwhText(e.target.value);
+              }}
               className="w-full accent-yellow-500 cursor-pointer"
             />
 
@@ -180,7 +189,10 @@ export const ElectricityCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               {[150, 220, 320, 420, 500].map((kwh) => (
                 <button
                   key={kwh}
-                  onClick={() => setUsageKwh(kwh)}
+                  onClick={() => {
+                    setUsageKwh(kwh);
+                    setUsageKwhText(String(kwh));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                     usageKwh === kwh
                       ? 'bg-yellow-500 text-slate-900 font-bold'

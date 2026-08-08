@@ -20,10 +20,15 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [joinDate, setJoinDate] = useState<string>(startStr);
   const [retireDate, setRetireDate] = useState<string>(todayStr);
   const [m1, setM1] = useState<number>(3500000);
+  const [m1Text, setM1Text] = useState('3500000');
   const [m2, setM2] = useState<number>(3500000);
+  const [m2Text, setM2Text] = useState('3500000');
   const [m3, setM3] = useState<number>(3500000);
+  const [m3Text, setM3Text] = useState('3500000');
   const [annualBonus, setAnnualBonus] = useState<number>(3000000);
+  const [annualBonusText, setAnnualBonusText] = useState('3000000');
   const [annualLeavePay, setAnnualLeavePay] = useState<number>(500000);
+  const [annualLeavePayText, setAnnualLeavePayText] = useState('500000');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -54,10 +59,15 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setJoinDate(restored.joinDate);
     setRetireDate(restored.retireDate);
     setM1(restored.m1);
+    setM1Text(String(restored.m1));
     setM2(restored.m2);
+    setM2Text(String(restored.m2));
     setM3(restored.m3);
+    setM3Text(String(restored.m3));
     setAnnualBonus(restored.annualBonus);
+    setAnnualBonusText(String(restored.annualBonus));
     setAnnualLeavePay(restored.annualLeavePay);
+    setAnnualLeavePayText(String(restored.annualLeavePay));
   });
 
   const handleCopy = () => {
@@ -156,9 +166,13 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="100000"
-                  value={m1}
+                  value={m1Text}
                   defaultValueLabel={3500000}
-                  onValueChange={(value) => setM1(Number(value) || 0)}
+                  onValueChange={(value) => {
+                    setM1Text(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setM1(n);
+                  }}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
@@ -167,9 +181,13 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="100000"
-                  value={m2}
+                  value={m2Text}
                   defaultValueLabel={3500000}
-                  onValueChange={(value) => setM2(Number(value) || 0)}
+                  onValueChange={(value) => {
+                    setM2Text(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setM2(n);
+                  }}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
@@ -178,9 +196,13 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="100000"
-                  value={m3}
+                  value={m3Text}
                   defaultValueLabel={3500000}
-                  onValueChange={(value) => setM3(Number(value) || 0)}
+                  onValueChange={(value) => {
+                    setM3Text(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setM3(n);
+                  }}
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
                 />
               </div>
@@ -196,9 +218,13 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="100000"
-                value={annualBonus}
+                value={annualBonusText}
                 defaultValueLabel={3000000}
-                onValueChange={(value) => setAnnualBonus(Number(value) || 0)}
+                onValueChange={(value) => {
+                  setAnnualBonusText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAnnualBonus(n);
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
             </div>
@@ -210,9 +236,13 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="50000"
-                value={annualLeavePay}
+                value={annualLeavePayText}
                 defaultValueLabel={500000}
-                onValueChange={(value) => setAnnualLeavePay(Number(value) || 0)}
+                onValueChange={(value) => {
+                  setAnnualLeavePayText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAnnualLeavePay(n);
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
               />
             </div>

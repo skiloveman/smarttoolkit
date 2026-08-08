@@ -13,6 +13,7 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [salaryType, setSalaryType] = useState<'annual' | 'monthly'>('annual');
   const [amountInput, setAmountInput] = useState<number>(45000000); // 45,000,000 KRW default
+  const [amountInputText, setAmountInputText] = useState('45000000');
   const [nonTaxable, setNonTaxable] = useState<number>(200000); // 200,000 KRW
   const [dependents, setDependents] = useState<number>(1);
   const [childrenUnder20, setChildrenUnder20] = useState<number>(0);
@@ -41,6 +42,7 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   }>('salary', (restored) => {
     setSalaryType(restored.salaryType);
     setAmountInput(restored.amountInput);
+    setAmountInputText(String(restored.amountInput));
     setNonTaxable(restored.nonTaxable);
     setDependents(restored.dependents);
     setChildrenUnder20(restored.childrenUnder20);
@@ -126,7 +128,10 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <button
                 onClick={() => {
                   setSalaryType('annual');
-                  if (amountInput < 10000000) setAmountInput(45000000);
+                  if (amountInput < 10000000) {
+                    setAmountInput(45000000);
+                    setAmountInputText('45000000');
+                  }
                 }}
                 className={`px-3 py-1.5 rounded-md transition-all ${
                   salaryType === 'annual'
@@ -139,7 +144,10 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <button
                 onClick={() => {
                   setSalaryType('monthly');
-                  if (amountInput > 20000000) setAmountInput(3500000);
+                  if (amountInput > 20000000) {
+                    setAmountInput(3500000);
+                    setAmountInputText('3500000');
+                  }
                 }}
                 className={`px-3 py-1.5 rounded-md transition-all ${
                   salaryType === 'monthly'
@@ -161,9 +169,13 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step={salaryType === 'annual' ? 1000000 : 100000}
-                value={amountInput}
+                value={amountInputText}
                 defaultValueLabel={salaryType === 'annual' ? 45000000 : 3500000}
-                onValueChange={(value) => setAmountInput(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setAmountInputText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAmountInput(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-base font-bold text-slate-900 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all pr-12"
               />
               <span className="absolute right-4 top-3.5 text-xs font-semibold text-slate-400">원</span>
@@ -174,7 +186,10 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 {presets.map((val) => (
                   <button
                     key={val}
-                    onClick={() => setAmountInput(val)}
+                    onClick={() => {
+                      setAmountInput(val);
+                      setAmountInputText(String(val));
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                       amountInput === val
                         ? 'bg-blue-600 text-white font-semibold'

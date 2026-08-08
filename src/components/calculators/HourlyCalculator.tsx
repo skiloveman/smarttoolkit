@@ -12,9 +12,13 @@ interface Props {
 export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [hourlyWage, setHourlyWage] = useState<number>(10030); // 2025/2026 최저시급 10,030원
+  const [hourlyWageText, setHourlyWageText] = useState('10030');
   const [workHoursPerDay, setWorkHoursPerDay] = useState<number>(8); // 하루 8시간
+  const [workHoursPerDayText, setWorkHoursPerDayText] = useState('8');
   const [workDaysPerWeek, setWorkDaysPerWeek] = useState<number>(5); // 주 5일
+  const [workDaysPerWeekText, setWorkDaysPerWeekText] = useState('5');
   const [overtimeHoursPerWeek, setOvertimeHoursPerWeek] = useState<number>(0); // 주당 연장/야간 근무시간 (1.5배)
+  const [overtimeHoursPerWeekText, setOvertimeHoursPerWeekText] = useState('0');
   const [taxDeduction, setTaxDeduction] = useState<'none' | 'tax33' | 'insurance4'>('tax33'); // 미공제, 3.3%, 4대보험
 
   const [copied, setCopied] = useState<boolean>(false);
@@ -64,9 +68,13 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     taxDeduction: 'none' | 'tax33' | 'insurance4';
   }>('hourly', (restored) => {
     setHourlyWage(restored.hourlyWage);
+    setHourlyWageText(String(restored.hourlyWage));
     setWorkHoursPerDay(restored.workHoursPerDay);
+    setWorkHoursPerDayText(String(restored.workHoursPerDay));
     setWorkDaysPerWeek(restored.workDaysPerWeek);
+    setWorkDaysPerWeekText(String(restored.workDaysPerWeek));
     setOvertimeHoursPerWeek(restored.overtimeHoursPerWeek);
+    setOvertimeHoursPerWeekText(String(restored.overtimeHoursPerWeek));
     setTaxDeduction(restored.taxDeduction);
   });
 
@@ -131,7 +139,10 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         {/* Minimum Wage Preset Button */}
         <button
-          onClick={() => setHourlyWage(10030)}
+          onClick={() => {
+            setHourlyWage(10030);
+            setHourlyWageText('10030');
+          }}
           className="px-3 py-1.5 rounded-lg bg-teal-50 border border-teal-200 text-teal-700 dark:bg-teal-950 dark:border-teal-900 dark:text-teal-300 text-xs font-bold flex items-center gap-1 shrink-0"
         >
           <span>2025/2026 최저시급 (10,030원) 적용</span>
@@ -150,16 +161,23 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <DefaultValueInput
               type="number"
               step="100"
-              value={hourlyWage}
+              value={hourlyWageText}
               defaultValueLabel={10030}
-              onValueChange={(value) => setHourlyWage(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setHourlyWageText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setHourlyWage(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
             />
             <div className="flex flex-wrap gap-1.5 mt-2">
               {[10030, 11000, 12000, 15000, 20000].map((w) => (
                 <button
                   key={w}
-                  onClick={() => setHourlyWage(w)}
+                  onClick={() => {
+                    setHourlyWage(w);
+                    setHourlyWageText(String(w));
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                     hourlyWage === w ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                   }`}
@@ -179,9 +197,13 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="0.5"
-                value={workHoursPerDay}
+                value={workHoursPerDayText}
                 defaultValueLabel={8}
-                onValueChange={(value) => setWorkHoursPerDay(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setWorkHoursPerDayText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setWorkHoursPerDay(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -193,9 +215,13 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="1"
-                value={workDaysPerWeek}
+                value={workDaysPerWeekText}
                 defaultValueLabel={5}
-                onValueChange={(value) => setWorkDaysPerWeek(Math.min(7, Math.max(0, Number(value) || 0)))}
+                onValueChange={(value) => {
+                  setWorkDaysPerWeekText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setWorkDaysPerWeek(Math.min(7, Math.max(0, n)));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -209,9 +235,13 @@ export const HourlyCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <DefaultValueInput
               type="number"
               step="0.5"
-              value={overtimeHoursPerWeek}
+              value={overtimeHoursPerWeekText}
               defaultValueLabel={0}
-              onValueChange={(value) => setOvertimeHoursPerWeek(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setOvertimeHoursPerWeekText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setOvertimeHoursPerWeek(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-xs font-bold text-slate-800 dark:text-slate-200"
             />
           </div>

@@ -15,13 +15,18 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   // Car Tax Inputs
   const [cc, setCc] = useState<number>(1998); // 2,000cc급
+  const [ccText, setCcText] = useState('1998');
   const [carAgeYears, setCarAgeYears] = useState<number>(1); // 신차 1년차
+  const [carAgeYearsText, setCarAgeYearsText] = useState('1');
   const [isCommercial, setIsCommercial] = useState<boolean>(false); // 영업용 여부
 
   // Fuel Cost Inputs
   const [annualDistanceKm, setAnnualDistanceKm] = useState<number>(15000); // 연간 15,000km
+  const [annualDistanceKmText, setAnnualDistanceKmText] = useState('15000');
   const [fuelEfficiency, setFuelEfficiency] = useState<number>(12.5); // 12.5 km/L
+  const [fuelEfficiencyText, setFuelEfficiencyText] = useState('12.5');
   const [fuelPricePerLiter, setFuelPricePerLiter] = useState<number>(1680); // 휘발유 1,680원/L
+  const [fuelPricePerLiterText, setFuelPricePerLiterText] = useState('1680');
 
   const [copied, setCopied] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
@@ -70,11 +75,16 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   }>('carTax', (restored) => {
     setActiveTab(restored.activeTab);
     setCc(restored.cc);
+    setCcText(String(restored.cc));
     setCarAgeYears(restored.carAgeYears);
+    setCarAgeYearsText(String(restored.carAgeYears));
     setIsCommercial(restored.isCommercial);
     setAnnualDistanceKm(restored.annualDistanceKm);
+    setAnnualDistanceKmText(String(restored.annualDistanceKm));
     setFuelEfficiency(restored.fuelEfficiency);
+    setFuelEfficiencyText(String(restored.fuelEfficiency));
     setFuelPricePerLiter(restored.fuelPricePerLiter);
+    setFuelPricePerLiterText(String(restored.fuelPricePerLiter));
   });
 
   const handleCopy = () => {
@@ -199,16 +209,23 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="50"
-                value={cc}
+                value={ccText}
                 defaultValueLabel={1998}
-                onValueChange={(value) => setCc(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setCcText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setCc(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-lg font-black text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {[998, 1598, 1998, 2497, 3470].map((c) => (
                   <button
                     key={c}
-                    onClick={() => setCc(c)}
+                    onClick={() => {
+                      setCc(c);
+                      setCcText(String(c));
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                       cc === c ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
@@ -229,16 +246,23 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 type="number"
                 min="1"
                 max="20"
-                value={carAgeYears}
+                value={carAgeYearsText}
                 defaultValueLabel={1}
-                onValueChange={(value) => setCarAgeYears(Math.max(1, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setCarAgeYearsText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setCarAgeYears(Math.max(1, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2 text-sm font-bold text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {[1, 2, 3, 5, 7, 10, 12].map((y) => (
                   <button
                     key={y}
-                    onClick={() => setCarAgeYears(y)}
+                    onClick={() => {
+                      setCarAgeYears(y);
+                      setCarAgeYearsText(String(y));
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                       carAgeYears === y ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
@@ -317,16 +341,23 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <DefaultValueInput
                 type="number"
                 step="1000"
-                value={annualDistanceKm}
+                value={annualDistanceKmText}
                 defaultValueLabel={15000}
-                onValueChange={(value) => setAnnualDistanceKm(Math.max(0, Number(value) || 0))}
+                onValueChange={(value) => {
+                  setAnnualDistanceKmText(value);
+                  const n = Number(value);
+                  if (value.trim() !== '' && !Number.isNaN(n)) setAnnualDistanceKm(Math.max(0, n));
+                }}
                 className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
               />
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {[10000, 15000, 20000, 30000].map((d) => (
                   <button
                     key={d}
-                    onClick={() => setAnnualDistanceKm(d)}
+                    onClick={() => {
+                      setAnnualDistanceKm(d);
+                      setAnnualDistanceKmText(String(d));
+                    }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                       annualDistanceKm === d ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
@@ -345,9 +376,13 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="0.5"
-                  value={fuelEfficiency}
+                  value={fuelEfficiencyText}
                   defaultValueLabel={12.5}
-                  onValueChange={(value) => setFuelEfficiency(Math.max(0.1, Number(value) || 0))}
+                  onValueChange={(value) => {
+                    setFuelEfficiencyText(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setFuelEfficiency(Math.max(0.1, n));
+                  }}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
                 />
               </div>
@@ -359,9 +394,13 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 <DefaultValueInput
                   type="number"
                   step="10"
-                  value={fuelPricePerLiter}
+                  value={fuelPricePerLiterText}
                   defaultValueLabel={1680}
-                  onValueChange={(value) => setFuelPricePerLiter(Math.max(0, Number(value) || 0))}
+                  onValueChange={(value) => {
+                    setFuelPricePerLiterText(value);
+                    const n = Number(value);
+                    if (value.trim() !== '' && !Number.isNaN(n)) setFuelPricePerLiter(Math.max(0, n));
+                  }}
                   className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-2.5 text-base font-bold text-slate-800 dark:text-slate-200"
                 />
               </div>

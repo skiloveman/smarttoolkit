@@ -13,6 +13,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [unitType, setUnitType] = useState<'pyung' | 'length' | 'weight'>('pyung');
   const [inputValue, setInputValue] = useState<number>(34); // 34평 default (84㎡)
+  const [inputValueText, setInputValueText] = useState('34');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -34,6 +35,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   }>('unit', (restored) => {
     setUnitType(restored.unitType);
     setInputValue(restored.inputValue);
+    setInputValueText(String(restored.inputValue));
   });
 
   const handleCopy = () => {
@@ -74,6 +76,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             onClick={() => {
               setUnitType('pyung');
               setInputValue(34);
+              setInputValueText('34');
             }}
             className={`px-3 py-1.5 rounded-md transition-all ${
               unitType === 'pyung' ? 'bg-white dark:bg-slate-700 text-emerald-600 font-bold shadow-xs' : 'text-slate-500'
@@ -85,6 +88,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             onClick={() => {
               setUnitType('length');
               setInputValue(170);
+              setInputValueText('170');
             }}
             className={`px-3 py-1.5 rounded-md transition-all ${
               unitType === 'length' ? 'bg-white dark:bg-slate-700 text-emerald-600 font-bold shadow-xs' : 'text-slate-500'
@@ -96,6 +100,7 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             onClick={() => {
               setUnitType('weight');
               setInputValue(70);
+              setInputValueText('70');
             }}
             className={`px-3 py-1.5 rounded-md transition-all ${
               unitType === 'weight' ? 'bg-white dark:bg-slate-700 text-emerald-600 font-bold shadow-xs' : 'text-slate-500'
@@ -114,16 +119,23 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={inputValue}
+              value={inputValueText}
               defaultValueLabel={34}
-              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setInputValueText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setInputValue(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
             <div className="flex flex-wrap gap-1.5">
               {[18, 24, 30, 34, 42, 59].map((p) => (
                 <button
                   key={p}
-                  onClick={() => setInputValue(p)}
+                  onClick={() => {
+                    setInputValue(p);
+                    setInputValueText(String(p));
+                  }}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold ${
                     inputValue === p ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
                   }`}
@@ -171,9 +183,13 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={inputValue}
+              value={inputValueText}
               defaultValueLabel={170}
-              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setInputValueText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setInputValue(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
           </div>
@@ -202,9 +218,13 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </label>
             <DefaultValueInput
               type="number"
-              value={inputValue}
+              value={inputValueText}
               defaultValueLabel={70}
-              onValueChange={(value) => setInputValue(Math.max(0, Number(value) || 0))}
+              onValueChange={(value) => {
+                setInputValueText(value);
+                const n = Number(value);
+                if (value.trim() !== '' && !Number.isNaN(n)) setInputValue(Math.max(0, n));
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 px-4 py-3 text-2xl font-black text-slate-900 dark:text-slate-100 focus:outline-none"
             />
           </div>
