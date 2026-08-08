@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Sparkles, Copy, Check, RefreshCw, Dices, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Sparkles, Copy, Check, RefreshCw, Dices, SlidersHorizontal, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
+import { LottoSoundPlayer } from '../../utils/lottoSounds';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -90,7 +91,49 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const ballCanvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
+  const soundRef = useRef<LottoSoundPlayer | null>(null);
+  const genTimeoutRef = useRef<number | null>(null);
+  if (!soundRef.current) {
+    soundRef.current = new LottoSoundPlayer();
+  }
+
+  useEffect(() => {
+    try {
+      const savedPref = localStorage.getItem('lotto_sound_enabled');
+      if (savedPref !== null) {
+        setSoundEnabled(savedPref === 'true');
+      }
+    } catch {
+      // Ignore unavailable localStorage (private browsing, etc.)
+    }
+  }, []);
+
+  useEffect(() => {
+    soundRef.current?.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    return () => {
+      if (genTimeoutRef.current !== null) {
+        window.clearTimeout(genTimeoutRef.current);
+      }
+      soundRef.current?.close();
+    };
+  }, []);
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('lotto_sound_enabled', String(next));
+      } catch {
+        // Ignore write failures.
+      }
+      return next;
+    });
+  };
 
   usePendingHistoryRestore<{
     gameCount: number;
@@ -135,20 +178,34 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    let iterations = 0;
-    const interval = setInterval(() => {
-      iterations++;
+
+    // Roll through random combinations for a few seconds, slowing down
+    // toward the end like a real drum draw, before settling on the result.
+    const totalSteps = 20;
+    let step = 0;
+
+    const runStep = () => {
+      step += 1;
       const tempGames: number[][] = [];
       for (let i = 0; i < gameCount; i++) {
         tempGames.push(generateSingleGame(fixedNumbers, excludedNumbers));
       }
       setGames(tempGames);
+      soundRef.current?.playRollTick();
 
-      if (iterations >= 8) {
-        clearInterval(interval);
+      if (step >= totalSteps) {
+        genTimeoutRef.current = null;
         setIsGenerating(false);
+        soundRef.current?.playReveal();
+        return;
       }
-    }, 80);
+
+      const progress = step / totalSteps;
+      const delay = 70 + progress * progress * 190;
+      genTimeoutRef.current = window.setTimeout(runStep, delay);
+    };
+
+    genTimeoutRef.current = window.setTimeout(runStep, 70);
   };
 
   const toggleFixed = (num: number) => {
@@ -224,6 +281,17 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Sound Toggle */}
+          <button
+            type="button"
+            onClick={toggleSound}
+            title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span>{soundEnabled ? 'Sound ON' : 'Sound OFF'}</span>
+          </button>
+
           {/* Settings Toggle */}
           <button
             onClick={() => setShowSettings(!showSettings)}
