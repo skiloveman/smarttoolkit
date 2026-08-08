@@ -858,7 +858,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div className="w-full max-w-[720px] mx-auto">
-          <div className="relative mb-3 h-9 overflow-visible">
+          <div className="relative mb-3 h-10 overflow-visible">
             {Array.from({ length: laneCount }, (_, i) => {
               const done = revealedStartLanes[i] ?? false;
               const isActive = activeStartLane === i;
@@ -869,7 +869,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   disabled={!runData || isAnimating || done}
                   onClick={() => startSingleLaneAnimation(i)}
                   title={runData && !done ? `${names[i]} 내려보기` : undefined}
-                  className={`absolute -translate-x-1/2 rounded-full px-3 py-1.5 text-[11px] font-bold text-white text-center shadow-sm truncate transition-all disabled:cursor-default ${
+                  className={`absolute -translate-x-1/2 rounded-full px-3 py-2 text-xs font-bold text-white text-center shadow-sm truncate transition-all disabled:cursor-default ${
                     isActive
                       ? 'ring-2 ring-white scale-105'
                       : done
@@ -883,7 +883,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                     // Expressed as a % of the ladder's own width (not a fixed
                     // px value) so tags shrink together with the canvas on
                     // narrow mobile screens instead of overlapping.
-                    width: `${(Math.max(56, Math.floor(560 / laneCount)) / LADDER_WIDTH) * 100}%`,
+                    width: `${(Math.max(68, Math.floor(660 / laneCount)) / LADDER_WIDTH) * 100}%`,
                     backgroundColor: laneColor(i),
                   }}
                 >
@@ -901,14 +901,14 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             className="w-full h-auto rounded-xl bg-black"
           />
 
-          <div className="relative mt-2 h-8 overflow-hidden">
+          <div className="relative mt-2 h-9 overflow-hidden">
             {Array.from({ length: laneCount }, (_, i) => (
               <div
                 key={`result-tag-${i}`}
-                className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
+                className="absolute -translate-x-1/2 text-center text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-1 truncate"
                 style={{
                   left: `${laneLeftPercents[i]}%`,
-                  width: `${(Math.max(36, Math.floor(460 / laneCount)) / LADDER_WIDTH) * 100}%`,
+                  width: `${(Math.max(44, Math.floor(540 / laneCount)) / LADDER_WIDTH) * 100}%`,
                 }}
               >
                 {results[i]}
