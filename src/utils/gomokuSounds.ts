@@ -31,49 +31,70 @@ export class StoneSoundPlayer {
 
     const t0 = ctx.currentTime;
 
-    // Sharp noise "click" for the surface contact.
-    const duration = 0.09;
+    // Crisp "딱" crack: a very short, steeply-decaying noise burst pushed
+    // toward the high end so it reads as a snap rather than a soft click.
+    const duration = 0.045;
     const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i += 1) {
-      const decay = Math.pow(1 - i / bufferSize, 3);
+      const decay = Math.pow(1 - i / bufferSize, 6);
       data[i] = (Math.random() * 2 - 1) * decay;
     }
 
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
 
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 1500;
+
     const bandpass = ctx.createBiquadFilter();
     bandpass.type = 'bandpass';
-    bandpass.frequency.value = 2400;
-    bandpass.Q.value = 1.1;
+    bandpass.frequency.value = 3800;
+    bandpass.Q.value = 0.9;
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.55, t0);
+    noiseGain.gain.setValueAtTime(0.8, t0);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
 
-    noise.connect(bandpass);
+    noise.connect(highpass);
+    highpass.connect(bandpass);
     bandpass.connect(noiseGain);
     noiseGain.connect(ctx.destination);
     noise.start(t0);
-    noise.stop(t0 + duration + 0.02);
+    noise.stop(t0 + duration + 0.01);
 
-    // Low "thock" body resonance so it doesn't sound like a bare click.
+    // Instantaneous click transient right at the attack for extra snap.
+    const clickOsc = ctx.createOscillator();
+    clickOsc.type = 'square';
+    clickOsc.frequency.setValueAtTime(1300, t0);
+
+    const clickGain = ctx.createGain();
+    clickGain.gain.setValueAtTime(0.32, t0);
+    clickGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.012);
+
+    clickOsc.connect(clickGain);
+    clickGain.connect(ctx.destination);
+    clickOsc.start(t0);
+    clickOsc.stop(t0 + 0.015);
+
+    // Just a hint of low body under the crack, cut off quickly so it stays
+    // "딱!" and doesn't trail off into a soft "thock".
     const osc = ctx.createOscillator();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(200, t0);
-    osc.frequency.exponentialRampToValueAtTime(85, t0 + 0.06);
+    osc.frequency.setValueAtTime(260, t0);
+    osc.frequency.exponentialRampToValueAtTime(140, t0 + 0.025);
 
     const oscGain = ctx.createGain();
     oscGain.gain.setValueAtTime(0.001, t0);
-    oscGain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.005);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
+    oscGain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.003);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.03);
 
     osc.connect(oscGain);
     oscGain.connect(ctx.destination);
     osc.start(t0);
-    osc.stop(t0 + 0.09);
+    osc.stop(t0 + 0.035);
   }
 
   close() {
