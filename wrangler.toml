@@ -1,3 +1,8 @@
 name = "smarttoolkit"
 compatibility_date = "2026-08-04"
 pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "LEADERBOARD_DB"
+database_name = "smarttoolkit-watermelon-leaderboard"
+database_id = "a7af130e-8106-4777-9718-7f91a5bbeb14"

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Matter from 'matter-js';
-import { BookmarkPlus, RefreshCw, Volume2, VolumeX } from 'lucide-react';
+import { BookmarkPlus, RefreshCw, Trophy, Volume2, VolumeX } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 import { SuikaSoundPlayer } from '../../utils/suikaSounds';
@@ -97,6 +97,16 @@ interface SavedFruit {
   y: number;
 }
 
+interface LeaderboardEntry {
+  id: number;
+  name: string;
+  comment: string;
+  score: number;
+  created_at: string;
+}
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const normalizeSavedFruits = (raw: unknown): SavedFruit[] => {
   if (!Array.isArray(raw)) return [];
 
@@ -151,6 +161,19 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
   const [saved, setSaved] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  const [showRankForm, setShowRankForm] = useState(false);
+  const [didNotQualify, setDidNotQualify] = useState(false);
+  const [achievedRank, setAchievedRank] = useState<number | null>(null);
+  const [rankFormName, setRankFormName] = useState('');
+  const [rankFormEmail, setRankFormEmail] = useState('');
+  const [rankFormComment, setRankFormComment] = useState('');
+  const [rankFormSubmitting, setRankFormSubmitting] = useState(false);
+  const [rankFormError, setRankFormError] = useState<string | null>(null);
+  const evaluatedGameOverRef = useRef(false);
+
   useEffect(() => {
     try {
       const savedPref = localStorage.getItem('suika_sound_enabled');
@@ -176,6 +199,86 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       }
       return next;
     });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/watermelon-leaderboard');
+        const data = (await res.json()) as { ok: boolean; entries?: LeaderboardEntry[]; message?: string };
+        if (cancelled) return;
+        if (data.ok && Array.isArray(data.entries)) {
+          setLeaderboard(data.entries);
+        } else {
+          setLeaderboardError(data.message || '순위를 불러오지 못했습니다.');
+        }
+      } catch {
+        if (!cancelled) setLeaderboardError('순위를 불러오지 못했습니다.');
+      } finally {
+        if (!cancelled) setLeaderboardLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!gameOver || evaluatedGameOverRef.current) return;
+    evaluatedGameOverRef.current = true;
+
+    const lowestTop10Score = leaderboard.length >= 10 ? leaderboard[leaderboard.length - 1].score : 0;
+    const qualifies = score > 0 && (leaderboard.length < 10 || score >= lowestTop10Score);
+
+    if (qualifies) {
+      setShowRankForm(true);
+    } else {
+      setDidNotQualify(true);
+    }
+  }, [gameOver, score, leaderboard]);
+
+  const submitRankEntry = async () => {
+    const name = rankFormName.trim();
+    const email = rankFormEmail.trim();
+    const comment = rankFormComment.trim();
+
+    if (!name || !email || !comment) {
+      setRankFormError('이름, 이메일, 소감을 모두 입력해 주세요.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      setRankFormError('이메일 형식을 확인해 주세요.');
+      return;
+    }
+
+    setRankFormSubmitting(true);
+    setRankFormError(null);
+
+    try {
+      const res = await fetch('/api/watermelon-leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, comment, score }),
+      });
+      const data = (await res.json()) as { ok: boolean; entries?: LeaderboardEntry[]; rank?: number | null; message?: string };
+
+      if (!res.ok || !data.ok) {
+        setRankFormError(data.message || '등록 중 오류가 발생했습니다.');
+        return;
+      }
+
+      setLeaderboard(data.entries ?? []);
+      setAchievedRank(data.rank ?? null);
+      setShowRankForm(false);
+      if (!data.rank) {
+        setDidNotQualify(true);
+      }
+    } catch {
+      setRankFormError('네트워크 오류로 등록하지 못했습니다.');
+    } finally {
+      setRankFormSubmitting(false);
+    }
   };
 
   const nextFruit = FRUITS[nextLevel];
@@ -551,6 +654,15 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     gameOverRef.current = false;
     setGameOver(false);
     setMessage('새 게임을 시작합니다. 포인터로 조준하고 클릭(탭)해서 떨어뜨리세요.');
+
+    evaluatedGameOverRef.current = false;
+    setShowRankForm(false);
+    setDidNotQualify(false);
+    setAchievedRank(null);
+    setRankFormName('');
+    setRankFormEmail('');
+    setRankFormComment('');
+    setRankFormError(null);
   };
 
   const getLocalX = (clientX: number) => {
@@ -635,6 +747,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
   const isBoardEmpty = useMemo(() => !hasFruits, [hasFruits]);
 
   return (
+    <>
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
@@ -730,5 +843,117 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         점수 규칙: 두 과일이 합쳐질 때마다 결과 과일의 점수가 누적됩니다. 수박(🍉)끼리 합치면 큰 보너스 점수와 함께 사라집니다.
       </div>
     </div>
+
+      <div className="mt-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-4">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-amber-500" />
+          <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">TOP 10 명예의 전당</h4>
+        </div>
+
+        {gameOver && showRankForm && (
+          <div className="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/80 dark:bg-emerald-950/30 p-4 space-y-3">
+            <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+              🎉 축하합니다! 이번 점수 {score.toLocaleString()}점이 TOP 10 안에 들었어요. 정보를 입력하고 순위에 등록해보세요.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={rankFormName}
+                onChange={(e) => setRankFormName(e.target.value)}
+                placeholder="이름 또는 닉네임"
+                maxLength={40}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              />
+              <input
+                type="email"
+                value={rankFormEmail}
+                onChange={(e) => setRankFormEmail(e.target.value)}
+                placeholder="이메일 (비공개)"
+                maxLength={120}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              />
+            </div>
+            <textarea
+              value={rankFormComment}
+              onChange={(e) => setRankFormComment(e.target.value)}
+              placeholder="한 줄 소감을 남겨주세요"
+              maxLength={300}
+              rows={2}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 resize-none"
+            />
+            {rankFormError && <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{rankFormError}</p>}
+            <button
+              type="button"
+              onClick={submitRankEntry}
+              disabled={rankFormSubmitting}
+              className="w-full sm:w-auto px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors disabled:opacity-60"
+            >
+              {rankFormSubmitting ? '등록 중...' : '순위에 등록하기'}
+            </button>
+            <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+              이메일은 순위표에 공개되지 않으며, 이름과 소감만 다른 방문자에게 표시됩니다.
+            </p>
+          </div>
+        )}
+
+        {gameOver && achievedRank !== null && (
+          <div className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4 text-sm font-bold text-amber-800 dark:text-amber-300">
+            🏆 {achievedRank}위로 명예의 전당에 등록되었습니다!
+          </div>
+        )}
+
+        {gameOver && didNotQualify && achievedRank === null && (
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-3 text-xs text-slate-600 dark:text-slate-400">
+            아쉽게도 이번 점수는 TOP 10에 들지 못했어요. 다시 도전해보세요!
+          </div>
+        )}
+
+        {leaderboardLoading ? (
+          <p className="text-xs text-slate-400 dark:text-slate-500">순위를 불러오는 중...</p>
+        ) : leaderboardError ? (
+          <p className="text-xs text-rose-500 dark:text-rose-400">{leaderboardError}</p>
+        ) : leaderboard.length === 0 ? (
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            아직 등록된 기록이 없습니다. 첫 번째 기록의 주인공이 되어보세요!
+          </p>
+        ) : (
+          <ol className="space-y-1.5">
+            {leaderboard.map((entry, idx) => {
+              const rank = idx + 1;
+              const rankBadgeClass =
+                rank === 1
+                  ? 'bg-amber-400 text-amber-950'
+                  : rank === 2
+                    ? 'bg-slate-300 text-slate-800'
+                    : rank === 3
+                      ? 'bg-orange-300 text-orange-950'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+
+              return (
+                <li
+                  key={entry.id}
+                  className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 px-3 py-2.5"
+                >
+                  <span className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-black ${rankBadgeClass}`}>
+                    {rank}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{entry.name}</span>
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 shrink-0">
+                        {entry.score.toLocaleString()}점
+                      </span>
+                    </div>
+                    {entry.comment && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{entry.comment}</p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
+    </>
   );
 };
