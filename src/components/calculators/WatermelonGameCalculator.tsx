@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as Matter from 'matter-js';
-import { BookmarkPlus, RefreshCw } from 'lucide-react';
+import { BookmarkPlus, RefreshCw, Volume2, VolumeX } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
+import { SuikaSoundPlayer } from '../../utils/suikaSounds';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -22,6 +23,24 @@ type FruitPlugin = {
 };
 
 type FruitBody = Matter.Body & { plugin: FruitPlugin };
+
+interface PopEffect {
+  x: number;
+  y: number;
+  startTime: number;
+  radius: number;
+  color: string;
+}
+
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  life: number;
+  maxLife: number;
+  emoji: string;
+}
 
 const FRUITS: FruitInfo[] = [
   { name: '체리', emoji: '🍒', points: 1 },
@@ -46,10 +65,23 @@ const LINE_Y = 78;
 const SPAWN_Y = 40;
 const DROP_COOLDOWN_MS = 260;
 const GAME_OVER_GRACE_MS = 1000;
+const GROW_ANIM_MS = 380;
+const POP_ANIM_MS = 420;
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const radiusForLevel = (level: number) => 10 + level * 5;
+
+const popColorForLevel = (level: number) => `hsl(${(level * 37) % 360}, 82%, 62%)`;
+
+// Springy overshoot so newly merged fruit "pops" bigger than its final size
+// before settling back down — https://easings.net/#easeOutElastic
+const easeOutElastic = (t: number) => {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const c4 = (2 * Math.PI) / 3;
+  return Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+};
 
 const randomSpawnLevel = () => {
   const roll = Math.random();
@@ -102,6 +134,12 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
   const canDropRef = useRef(true);
   const gameOverRef = useRef(false);
   const pendingRestoreRef = useRef<SavedFruit[] | null>(null);
+  const popEffectsRef = useRef<PopEffect[]>([]);
+  const particlesRef = useRef<Particle[]>([]);
+  const soundRef = useRef<SuikaSoundPlayer | null>(null);
+  if (!soundRef.current) {
+    soundRef.current = new SuikaSoundPlayer();
+  }
 
   const [nextLevel, setNextLevel] = useState(nextLevelRef.current);
   const [score, setScore] = useState(0);
@@ -111,6 +149,34 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
   const [hasFruits, setHasFruits] = useState(false);
   const [message, setMessage] = useState('포인터를 움직여 조준하고, 클릭(탭)해서 과일을 떨어뜨리세요.');
   const [saved, setSaved] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  useEffect(() => {
+    try {
+      const savedPref = localStorage.getItem('suika_sound_enabled');
+      if (savedPref !== null) {
+        setSoundEnabled(savedPref === 'true');
+      }
+    } catch {
+      // Ignore unavailable localStorage (private browsing, etc.)
+    }
+  }, []);
+
+  useEffect(() => {
+    soundRef.current?.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('suika_sound_enabled', String(next));
+      } catch {
+        // Ignore write failures.
+      }
+      return next;
+    });
+  };
 
   const nextFruit = FRUITS[nextLevel];
 
@@ -160,6 +226,28 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     setMessage('게임 오버! 과일이 빨간 선을 넘었습니다.');
   };
 
+  const spawnPop = (x: number, y: number, radius: number, color: string) => {
+    popEffectsRef.current.push({ x, y, startTime: performance.now(), radius, color });
+  };
+
+  const spawnConfetti = (x: number, y: number) => {
+    const emojis = ['🎉', '✨', '⭐', '🍉', '💫'];
+    for (let i = 0; i < 20; i += 1) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.2 + Math.random() * 2.4;
+      const maxLife = 800 + Math.random() * 500;
+      particlesRef.current.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.8,
+        life: maxLife,
+        maxLife,
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+      });
+    }
+  };
+
   const processMerges = () => {
     const queue = pendingMergesRef.current;
     if (queue.length === 0) return;
@@ -184,6 +272,10 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
 
       if (isFinal) {
         addedScore += FRUITS[MAX_LEVEL].points * 2;
+        spawnPop(midX, midY, radiusForLevel(MAX_LEVEL) * 1.4, '#f472b6');
+        spawnConfetti(midX, midY);
+        soundRef.current?.playBigPop();
+        window.setTimeout(() => soundRef.current?.playFanfare(), 160);
         return;
       }
 
@@ -193,8 +285,13 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       fruitsRef.current.push(newBody);
       addedScore += FRUITS[newLevel].points;
 
+      spawnPop(midX, midY, radiusForLevel(newLevel), popColorForLevel(newLevel));
+      soundRef.current?.playMerge(newLevel);
+
       if (newLevel === MAX_LEVEL) {
         watermelonMade = true;
+        spawnConfetti(midX, midY);
+        soundRef.current?.playFanfare();
       }
     });
 
@@ -249,15 +346,34 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     ctx.stroke();
     ctx.setLineDash([]);
 
+    const now = performance.now();
+
     fruitsRef.current.forEach((body) => {
       if (body.plugin.removed) return;
       const { x, y } = body.position;
       const r = body.circleRadius ?? radiusForLevel(body.plugin.level);
       const fruit = FRUITS[body.plugin.level];
 
+      // Cute "jelly pop" bounce whenever a fruit appears (dropped or merged):
+      // an elastic overshoot on scale plus a decaying squash/stretch wobble.
+      const age = now - body.plugin.spawnTime;
+      let scaleX = 1;
+      let scaleY = 1;
+      let wobbleRot = 0;
+      if (age < GROW_ANIM_MS) {
+        const t = age / GROW_ANIM_MS;
+        const overshoot = easeOutElastic(t);
+        const decay = 1 - t;
+        const squish = Math.sin(t * Math.PI * 3) * 0.22 * decay;
+        scaleX = overshoot * (1 + squish);
+        scaleY = overshoot * (1 - squish);
+        wobbleRot = Math.sin(t * Math.PI * 4) * 0.14 * decay;
+      }
+
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(body.angle);
+      ctx.rotate(body.angle + wobbleRot);
+      ctx.scale(scaleX, scaleY);
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)';
@@ -276,6 +392,34 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     ctx.fillRect(0, BOARD_H - WALL, BOARD_W, WALL);
     ctx.fillRect(0, 0, WALL, BOARD_H);
     ctx.fillRect(BOARD_W - WALL, 0, WALL, BOARD_H);
+
+    popEffectsRef.current = popEffectsRef.current.filter((p) => now - p.startTime < POP_ANIM_MS);
+    popEffectsRef.current.forEach((p) => {
+      const t = (now - p.startTime) / POP_ANIM_MS;
+      const ringRadius = p.radius * (1 + t * 1.3);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, ringRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = p.color;
+      ctx.globalAlpha = 1 - t;
+      ctx.lineWidth = 3 * (1 - t) + 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    });
+
+    particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
+    particlesRef.current.forEach((p) => {
+      p.x += p.vx * 1.6;
+      p.y += p.vy * 1.6;
+      p.vy += 0.12;
+      p.life -= 16;
+      const alpha = clamp(p.life / p.maxLife, 0, 1);
+      ctx.globalAlpha = alpha;
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.emoji, p.x, p.y);
+      ctx.globalAlpha = 1;
+    });
 
     if (!gameOverRef.current) {
       const r = radiusForLevel(nextLevelRef.current);
@@ -354,6 +498,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       Matter.World.clear(engine.world, false);
       Matter.Engine.clear(engine);
       engineRef.current = null;
+      soundRef.current?.close();
     };
   }, []);
 
@@ -443,6 +588,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     Matter.World.add(engine.world, body);
     fruitsRef.current.push(body);
     setHasFruits(true);
+    soundRef.current?.playDrop();
 
     const upcoming = randomSpawnLevel();
     nextLevelRef.current = upcoming;
@@ -501,6 +647,15 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSound}
+            title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            className="inline-flex items-center justify-center p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
           <button
             type="button"
             onClick={resetGame}
