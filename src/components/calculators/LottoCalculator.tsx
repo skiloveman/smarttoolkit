@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, Copy, Check, RefreshCw, Dices, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
@@ -6,6 +6,73 @@ import { usePendingHistoryRestore } from '../../utils/historyRestore';
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
+
+const BALL_SIZE = 40;
+const BALL_GAP = 8;
+const BALLS_PER_ROW = 6;
+const BALL_CANVAS_W = BALLS_PER_ROW * BALL_SIZE + (BALLS_PER_ROW - 1) * BALL_GAP;
+const BALL_CANVAS_H = BALL_SIZE + 16;
+
+// Official Korean Lotto 6/45 ball color bands, rendered as a glossy sphere.
+const getBallColors = (num: number) => {
+  if (num >= 1 && num <= 10) {
+    return { light: '#fff3b8', mid: '#f4c430', dark: '#c99a10', text: '#4a3300' };
+  } else if (num >= 11 && num <= 20) {
+    return { light: '#9dcdf7', mid: '#4a90e2', dark: '#2f5fa8', text: '#ffffff' };
+  } else if (num >= 21 && num <= 30) {
+    return { light: '#f6ada1', mid: '#e2574c', dark: '#a8362c', text: '#ffffff' };
+  } else if (num >= 31 && num <= 40) {
+    return { light: '#c2c2c2', mid: '#8a8a8a', dark: '#565656', text: '#ffffff' };
+  }
+  return { light: '#a3e3a7', mid: '#4caf50', dark: '#2e7d32', text: '#ffffff' };
+};
+
+const drawLottoBall = (ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, num: number) => {
+  const { light, mid, dark, text } = getBallColors(num);
+
+  // Soft drop shadow so the ball reads as sitting on a surface.
+  ctx.beginPath();
+  ctx.ellipse(cx + r * 0.14, cy + r * 0.22, r * 0.92, r * 0.78, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+  ctx.fill();
+
+  // Sphere body with an offset light source for a glossy plastic look.
+  const grad = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.4, r * 0.08, cx, cy, r);
+  grad.addColorStop(0, light);
+  grad.addColorStop(0.55, mid);
+  grad.addColorStop(1, dark);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.18)';
+  ctx.stroke();
+
+  // Glossy highlight streak.
+  ctx.beginPath();
+  ctx.ellipse(cx - r * 0.32, cy - r * 0.42, r * 0.34, r * 0.2, -0.5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+  ctx.fill();
+
+  ctx.fillStyle = text;
+  ctx.font = `800 ${Math.round(r * 1.02)}px "Pretendard", "Apple SD Gothic Neo", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(num), cx, cy + r * 0.04);
+};
+
+const drawBallRow = (canvas: HTMLCanvasElement, game: number[]) => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.clearRect(0, 0, BALL_CANVAS_W, BALL_CANVAS_H);
+  const r = (BALL_SIZE / 2) * 0.92;
+  const cy = BALL_CANVAS_H / 2 - 1;
+  game.forEach((num, i) => {
+    const cx = BALL_SIZE / 2 + i * (BALL_SIZE + BALL_GAP);
+    drawLottoBall(ctx, cx, cy, r, num);
+  });
+};
 
 export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
@@ -23,6 +90,7 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const ballCanvasRefs = useRef<Array<HTMLCanvasElement | null>>([]);
 
   usePendingHistoryRestore<{
     gameCount: number;
@@ -38,20 +106,12 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setGames(restored.games);
   });
 
-  // Ball Color Helper for Korean Lotto 6/45
-  const getBallStyle = (num: number) => {
-    if (num >= 1 && num <= 10) {
-      return 'bg-amber-400 text-slate-900 border-amber-500 shadow-amber-400/30';
-    } else if (num >= 11 && num <= 20) {
-      return 'bg-blue-500 text-white border-blue-600 shadow-blue-500/30';
-    } else if (num >= 21 && num <= 30) {
-      return 'bg-rose-500 text-white border-rose-600 shadow-rose-500/30';
-    } else if (num >= 31 && num <= 40) {
-      return 'bg-slate-600 text-white border-slate-700 shadow-slate-600/30';
-    } else {
-      return 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-500/30';
-    }
-  };
+  useEffect(() => {
+    games.slice(0, gameCount).forEach((game, idx) => {
+      const canvas = ballCanvasRefs.current[idx];
+      if (canvas) drawBallRow(canvas, game);
+    });
+  }, [games, gameCount]);
 
   // Helper to generate a single valid game array (sorted ascending)
   const generateSingleGame = (fixed: number[], excluded: number[]): number[] => {
@@ -307,19 +367,16 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   자동선택
                 </span>
 
-                {/* 6 Lotto Balls */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {game.map((num, bIdx) => (
-                    <div
-                      key={bIdx}
-                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center font-black text-sm sm:text-base shadow-xs transition-all transform ${
-                        isGenerating ? 'scale-90 opacity-70' : 'scale-100 opacity-100'
-                      } ${getBallStyle(num)}`}
-                    >
-                      {num}
-                    </div>
-                  ))}
-                </div>
+                {/* 6 Lotto Balls (HTML canvas, rendered as glossy spheres) */}
+                <canvas
+                  ref={(el) => {
+                    ballCanvasRefs.current[idx] = el;
+                  }}
+                  width={BALL_CANVAS_W}
+                  height={BALL_CANVAS_H}
+                  className={`transition-all duration-150 ${isGenerating ? 'scale-90 opacity-70' : 'scale-100 opacity-100'}`}
+                  style={{ maxWidth: '100%', height: 'auto' }}
+                />
               </div>
 
               {/* Copy Single Game */}

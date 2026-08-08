@@ -684,11 +684,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400">
-            {moveCount}수
-          </span>
-        </div>
       </div>
 
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1 flex items-center gap-1 text-xs font-semibold max-w-md">
@@ -754,7 +749,7 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-2 sm:p-3">
-        <div className="flex items-center justify-center mb-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
           <span
             className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold ${
               winner === 1 || winner === 2
@@ -774,6 +769,9 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               />
             )}
             {statusLabel}
+          </span>
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/80 dark:bg-black/30 text-amber-800 dark:text-amber-300">
+            {moveCount}수
           </span>
         </div>
         <div className="w-full max-w-[640px] mx-auto p-1 sm:p-2">
