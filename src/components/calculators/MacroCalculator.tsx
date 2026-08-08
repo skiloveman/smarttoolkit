@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Percent, BookmarkPlus } from 'lucide-react';
+import { Percent } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
@@ -67,9 +67,7 @@ export const MacroCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           <Percent className="w-5 h-5 text-violet-500" />
           <span>탄.단.지(매크로 영양소) 계산기</span>
         </h3>
-        <button onClick={handleSave} className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" title="저장">
-          <BookmarkPlus className="w-4 h-4" />
-        </button>
+        <button onClick={handleSave} className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap" title="계산기록에서 다시 가져올 수 있습니다.">기록저장</button>
       </div>
 
       <div className="space-y-3">

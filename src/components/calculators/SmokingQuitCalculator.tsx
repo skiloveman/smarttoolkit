@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Flame, BookmarkPlus } from 'lucide-react';
+import { Flame } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum, formatYmd } from '../../utils/calculators';
@@ -117,11 +117,9 @@ export const SmokingQuitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </h3>
         <button
           onClick={handleSave}
-          className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-          title="저장"
-        >
-          <BookmarkPlus className="w-4 h-4" />
-        </button>
+          className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap"
+          title="계산기록에서 다시 가져올 수 있습니다."
+        >기록저장</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

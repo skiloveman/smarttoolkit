@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { calculateSeverance, formatKrw, formatYmd } from '../../utils/calculators';
 import { SeveranceInput, SaveHistoryFn } from '../../types';
-import { Coins, Copy, Check, Calendar, AlertCircle, BookmarkPlus } from 'lucide-react';
+import { Coins, Copy, Check, Calendar, AlertCircle } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
@@ -229,11 +229,9 @@ export const SeveranceCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-amber-600 transition-colors"
-                  title="저장"
-                >
-                  <BookmarkPlus className="w-4 h-4" />
-                </button>
+                  className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-amber-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                  title="계산기록에서 다시 가져올 수 있습니다."
+                >기록저장</button>
                 <button
                   onClick={handleCopy}
                   className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold flex items-center gap-1 transition-all"

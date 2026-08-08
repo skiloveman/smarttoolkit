@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { calculateVat, formatKrw, formatNum } from '../../utils/calculators';
 import { VatInput, SaveHistoryFn } from '../../types';
-import { Receipt, Copy, Check, BookmarkPlus } from 'lucide-react';
+import { Receipt, Copy, Check } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
@@ -154,11 +154,9 @@ export const VatCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors"
-                  title="저장"
-                >
-                  <BookmarkPlus className="w-4 h-4" />
-                </button>
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                  title="계산기록에서 다시 가져올 수 있습니다."
+                >기록저장</button>
                 <button
                   onClick={() =>
                     copyToClipboard(

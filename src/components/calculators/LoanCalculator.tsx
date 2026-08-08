@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Landmark, Copy, Check, BookmarkPlus, Calendar, Table, Percent } from 'lucide-react';
+import { Landmark, Copy, Check, Calendar, Table, Percent } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
@@ -336,11 +336,9 @@ export const LoanCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100/50 transition-colors"
-                title="기록 저장"
-              >
-                <BookmarkPlus className="w-4 h-4" />
-              </button>
+                className="px-2.5 py-1.5.5 rounded-xl bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-100/50 transition-colors text-xs font-semibold whitespace-nowrap"
+                title="계산기록에서 다시 가져올 수 있습니다."
+              >기록저장</button>
 
               <button
                 onClick={handleCopy}

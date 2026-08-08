@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Copy, Check, BookmarkPlus, Fuel, ShieldCheck } from 'lucide-react';
+import { Car, Copy, Check, Fuel, ShieldCheck } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatKrw, formatNum } from '../../utils/calculators';
@@ -292,11 +292,9 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={handleSave}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100/50 transition-colors"
-                title="기록 저장"
-              >
-                <BookmarkPlus className="w-4 h-4" />
-              </button>
+                className="px-2.5 py-1.5.5 rounded-xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100/50 transition-colors text-xs font-semibold whitespace-nowrap"
+                title="계산기록에서 다시 가져올 수 있습니다."
+              >기록저장</button>
 
               <button
                 onClick={handleCopy}
@@ -394,11 +392,9 @@ export const CarTaxCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={handleSave}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100/50 transition-colors"
-                title="기록 저장"
-              >
-                <BookmarkPlus className="w-4 h-4" />
-              </button>
+                className="px-2.5 py-1.5.5 rounded-xl bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100/50 transition-colors text-xs font-semibold whitespace-nowrap"
+                title="계산기록에서 다시 가져올 수 있습니다."
+              >기록저장</button>
 
               <button
                 onClick={handleCopy}

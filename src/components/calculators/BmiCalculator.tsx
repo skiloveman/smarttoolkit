@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { calculateBmi, formatNum } from '../../utils/calculators';
 import { BmiInput, SaveHistoryFn } from '../../types';
-import { Activity, Copy, Check, Heart, Scale, Flame, BookmarkPlus } from 'lucide-react';
+import { Activity, Copy, Check, Heart, Scale, Flame } from 'lucide-react';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
@@ -196,11 +196,9 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors"
-                  title="저장"
-                >
-                  <BookmarkPlus className="w-4 h-4" />
-                </button>
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                  title="계산기록에서 다시 가져올 수 있습니다."
+                >기록저장</button>
                 <button
                   onClick={handleCopy}
                   className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1 transition-all"

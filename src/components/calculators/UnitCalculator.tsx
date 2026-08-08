@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Ruler, Copy, Check, ArrowLeftRight, BookmarkPlus } from 'lucide-react';
+import { Ruler, Copy, Check, ArrowLeftRight } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
@@ -148,11 +148,9 @@ export const UnitCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             <div className="flex justify-end gap-2 pt-4">
               <button
                 onClick={handleSave}
-                className="p-2 rounded-lg bg-white dark:bg-slate-800 border text-slate-600"
-                title="저장"
-              >
-                <BookmarkPlus className="w-4 h-4" />
-              </button>
+                className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border text-slate-600 text-xs font-semibold whitespace-nowrap"
+                title="계산기록에서 다시 가져올 수 있습니다."
+              >기록저장</button>
               <button
                 onClick={handleCopy}
                 className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1"

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { calculateSalary, formatKrw, formatNum } from '../../utils/calculators';
 import { SalaryInput, SaveHistoryFn } from '../../types';
-import { Copy, Check, Sparkles, BookmarkPlus } from 'lucide-react';
+import { Copy, Check, Sparkles } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
@@ -256,11 +256,9 @@ export const SalaryCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSave}
-                  className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  title="계산 결과 저장"
-                >
-                  <BookmarkPlus className="w-4 h-4" />
-                </button>
+                  className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-xs font-semibold whitespace-nowrap"
+                  title="계산기록에서 다시 가져올 수 있습니다."
+                >기록저장</button>
                 <button
                   onClick={handleCopy}
                   className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1 transition-all"
