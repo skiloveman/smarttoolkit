@@ -564,53 +564,85 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-3">
         <div className="w-full overflow-auto">
           <div className="mx-auto min-w-[340px] max-w-[760px] p-2">
-            <div className="mb-2 grid" style={{ gridTemplateColumns: `24px repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}>
-              <div />
+            <div className="mb-1 flex pl-[24px]">
               {COL_LABELS.map((label) => (
-                <div key={label} className="text-[10px] text-center font-semibold text-amber-800 dark:text-amber-300">
+                <div
+                  key={label}
+                  className="flex-1 text-center text-[10px] font-semibold text-amber-800 dark:text-amber-300"
+                >
                   {label}
                 </div>
               ))}
             </div>
 
-            <div
-              className="grid gap-0"
-              style={{ gridTemplateColumns: `24px repeat(${BOARD_SIZE}, minmax(0, 1fr))` }}
-            >
-              {board.map((row, rowIndex) =>
-                [
+            <div className="flex">
+              <div className="flex flex-col w-[24px]">
+                {Array.from({ length: BOARD_SIZE }, (_, rowIndex) => (
                   <div
                     key={`row-label-${rowIndex}`}
-                    className="text-[10px] text-center flex items-center justify-center font-semibold text-amber-800 dark:text-amber-300"
+                    className="flex-1 flex items-center justify-center text-[10px] font-semibold text-amber-800 dark:text-amber-300"
                   >
                     {rowIndex + 1}
-                  </div>,
-                  ...row.map((cell, colIndex) => {
+                  </div>
+                ))}
+              </div>
+
+              <div className="relative flex-1 aspect-square rounded-md bg-amber-100 dark:bg-amber-900/30">
+                {Array.from({ length: BOARD_SIZE }, (_, i) => {
+                  const pct = (i / (BOARD_SIZE - 1)) * 100;
+                  return (
+                    <React.Fragment key={`grid-line-${i}`}>
+                      <div
+                        className="absolute bg-amber-800/45 dark:bg-amber-700/60"
+                        style={{ left: `${pct}%`, top: 0, bottom: 0, width: 1 }}
+                      />
+                      <div
+                        className="absolute bg-amber-800/45 dark:bg-amber-700/60"
+                        style={{ top: `${pct}%`, left: 0, right: 0, height: 1 }}
+                      />
+                    </React.Fragment>
+                  );
+                })}
+
+                {board.map((row, rowIndex) =>
+                  row.map((cell, colIndex) => {
                     const key = `${rowIndex}-${colIndex}`;
                     const isWinningCell = winningCellSet.has(key);
                     const isLastMove = lastMoveKey === key;
+                    const leftPct = (colIndex / (BOARD_SIZE - 1)) * 100;
+                    const topPct = (rowIndex / (BOARD_SIZE - 1)) * 100;
+
                     return (
                       <button
                         key={key}
                         onClick={() => placeStone(rowIndex, colIndex)}
                         disabled={winner !== 0 || cell !== 0 || (aiEnabled && currentPlayer === 2)}
                         aria-label={`${rowIndex + 1}행 ${colIndex + 1}열`}
-                        className="relative aspect-square border border-amber-800/45 dark:border-amber-700/60 bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200/60 dark:hover:bg-amber-800/30 disabled:cursor-default"
+                        className="absolute flex items-center justify-center disabled:cursor-default group"
+                        style={{
+                          left: `${leftPct}%`,
+                          top: `${topPct}%`,
+                          width: `${100 / (BOARD_SIZE - 1)}%`,
+                          height: `${100 / (BOARD_SIZE - 1)}%`,
+                          transform: 'translate(-50%, -50%)',
+                        }}
                       >
-                        {cell !== 0 && (
+                        {cell !== 0 ? (
                           <span
-                            className={`absolute inset-[16%] rounded-full border shadow-sm ${
+                            className={`w-[78%] h-[78%] rounded-full border shadow-sm ${
                               cell === 1
                                 ? 'bg-slate-900 border-slate-800'
                                 : 'bg-slate-50 border-slate-300'
                             } ${isWinningCell ? 'ring-2 ring-emerald-500' : ''} ${isLastMove ? 'ring-2 ring-blue-500/20' : ''}`}
                           />
+                        ) : (
+                          <span className="w-[42%] h-[42%] rounded-full group-hover:bg-amber-300/50 dark:group-hover:bg-amber-600/25 transition-colors" />
                         )}
                       </button>
                     );
-                  }),
-                ]
-              )}
+                  })
+                )}
+              </div>
             </div>
           </div>
         </div>
