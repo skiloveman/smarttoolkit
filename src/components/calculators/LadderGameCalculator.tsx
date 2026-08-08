@@ -584,41 +584,6 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const allRevealed = runData ? revealedStartLanes.slice(0, laneCount).every(Boolean) : false;
 
-  const revealByBottomLane = useMemo(() => {
-    if (!runData) {
-      return Array.from({ length: laneCount }, () => true);
-    }
-
-    const reveal = Array.from({ length: laneCount }, () => false);
-    runData.finalLaneByStart.forEach((finalLane, startLane) => {
-      reveal[finalLane] = revealedStartLanes[startLane] ?? false;
-    });
-
-    return reveal;
-  }, [runData, laneCount, revealedStartLanes]);
-
-  const bottomParticipantNames = useMemo(() => {
-    if (!runData) {
-      return names.slice(0, laneCount);
-    }
-
-    const mapped = Array.from({ length: laneCount }, () => '');
-    runData.finalLaneByStart.forEach((finalLane, startLane) => {
-      if (revealByBottomLane[finalLane]) {
-        mapped[finalLane] = names[startLane] ?? `참가자 ${startLane + 1}`;
-      }
-    });
-
-    if (activeStartLane !== null && !revealedStartLanes[activeStartLane]) {
-      const movingTargetLane = runData.finalLaneByStart[activeStartLane];
-      if (movingTargetLane !== undefined) {
-        mapped[movingTargetLane] = names[activeStartLane] ?? `참가자 ${activeStartLane + 1}`;
-      }
-    }
-
-    return mapped;
-  }, [runData, names, laneCount, revealByBottomLane, activeStartLane, revealedStartLanes]);
-
   const tokenPositions = (runData?.paths ?? [])
     .map((path, idx) => {
       const isVisible = activeStartLane === idx || (revealedStartLanes[idx] ?? false);
@@ -756,133 +721,131 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">상단 이름 입력</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {Array.from({ length: laneCount }, (_, i) => (
-                <input
-                  key={`name-${i}`}
-                  type="text"
-                  value={names[i] ?? ''}
-                  onChange={(e) => updateName(i, e.target.value)}
-                  onFocus={() => handleNameFocus(i)}
-                  onBlur={() => handleNameBlur(i)}
-                  placeholder={`참가자 ${i + 1}`}
-                  className="rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-200"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">하단 결과값 입력</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {Array.from({ length: laneCount }, (_, i) => (
-                <input
-                  key={`result-${i}`}
-                  type="text"
-                  value={results[i] ?? ''}
-                  onChange={(e) => updateResult(i, e.target.value)}
-                  onFocus={() => handleResultFocus(i)}
-                  onBlur={() => handleResultBlur(i)}
-                  placeholder={`결과 ${i + 1}`}
-                  className="rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-200"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button
-              onClick={handleRun}
-              disabled={isAnimating}
-              className="flex-1 min-w-[190px] bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              {runData ? '사다리 다시 생성' : '사다리 생성'}
-            </button>
-
-            <button
-              onClick={handleSaveResult}
-              className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
-            >
-              <BookmarkPlus className="w-4 h-4" />
-              {saved ? '저장완료' : '결과 저장'}
-            </button>
-          </div>
-
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">참가자 선택</h4>
-              <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                {activeStartLane !== null
-                  ? `${names[activeStartLane]} 진행 중...`
-                  : runData
-                  ? '원하는 참가자를 눌러 내려보세요'
-                  : '먼저 사다리를 생성해 주세요'}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {Array.from({ length: laneCount }, (_, lane) => {
-                const done = revealedStartLanes[lane] ?? false;
-                const isActive = activeStartLane === lane;
-                return (
-                  <button
-                    key={`select-lane-${lane}`}
-                    disabled={!runData || isAnimating || done}
-                    onClick={() => startSingleLaneAnimation(lane)}
-                    className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                      isActive
-                        ? 'bg-blue-600 border-blue-600 text-white'
-                        : done
-                        ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-60'
-                    }`}
-                  >
-                    {names[lane]} {done ? '완료' : ''}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="space-y-4">
+        <div>
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">상단 이름 입력</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+            {Array.from({ length: laneCount }, (_, i) => (
+              <input
+                key={`name-${i}`}
+                type="text"
+                value={names[i] ?? ''}
+                onChange={(e) => updateName(i, e.target.value)}
+                onFocus={() => handleNameFocus(i)}
+                onBlur={() => handleNameBlur(i)}
+                placeholder={`참가자 ${i + 1}`}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-200"
+              />
+            ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
-          <div className="w-full">
-            <canvas
-              ref={canvasRef}
-              width={LADDER_WIDTH}
-              height={LADDER_HEIGHT}
-              className="w-full h-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-            />
-
-            <div className="relative mt-3 h-5 overflow-hidden">
-              {Array.from({ length: laneCount }, (_, i) => (
-                <div
-                  key={`name-tag-${i}`}
-                  className="absolute -translate-x-1/2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 truncate"
-                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
-                >
-                  {bottomParticipantNames[i]}
-                </div>
-              ))}
-            </div>
-
-            <div className="relative mt-2 h-8 overflow-hidden">
-              {Array.from({ length: laneCount }, (_, i) => (
-                <div
-                  key={`result-tag-${i}`}
-                  className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
-                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(460 / laneCount))}px` }}
-                >
-                  {results[i]}
-                </div>
-              ))}
-            </div>
+        <div>
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wider">하단 결과값 입력</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
+            {Array.from({ length: laneCount }, (_, i) => (
+              <input
+                key={`result-${i}`}
+                type="text"
+                value={results[i] ?? ''}
+                onChange={(e) => updateResult(i, e.target.value)}
+                onFocus={() => handleResultFocus(i)}
+                onBlur={() => handleResultBlur(i)}
+                placeholder={`결과 ${i + 1}`}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 px-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-200"
+              />
+            ))}
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button
+            onClick={handleRun}
+            disabled={isAnimating}
+            className="flex-1 min-w-[190px] bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-3 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+          >
+            <Play className="w-4 h-4" />
+            {runData ? '사다리 다시 생성' : '사다리 생성'}
+          </button>
+
+          <button
+            onClick={handleSaveResult}
+            className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
+          >
+            <BookmarkPlus className="w-4 h-4" />
+            {saved ? '저장완료' : '결과 저장'}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
+        <div className="w-full max-w-[720px] mx-auto">
+          <div className="relative mb-2 h-5 overflow-hidden">
+            {Array.from({ length: laneCount }, (_, i) => (
+              <div
+                key={`top-name-tag-${i}`}
+                className="absolute -translate-x-1/2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 truncate"
+                style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
+              >
+                {names[i]}
+              </div>
+            ))}
+          </div>
+
+          <canvas
+            ref={canvasRef}
+            width={LADDER_WIDTH}
+            height={LADDER_HEIGHT}
+            className="w-full h-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+          />
+
+          <div className="relative mt-2 h-8 overflow-hidden">
+            {Array.from({ length: laneCount }, (_, i) => (
+              <div
+                key={`result-tag-${i}`}
+                className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
+                style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(460 / laneCount))}px` }}
+              >
+                {results[i]}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">참가자 선택</h4>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            {activeStartLane !== null
+              ? `${names[activeStartLane]} 진행 중...`
+              : runData
+              ? '원하는 참가자를 눌러 내려보세요'
+              : '먼저 사다리를 생성해 주세요'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+          {Array.from({ length: laneCount }, (_, lane) => {
+            const done = revealedStartLanes[lane] ?? false;
+            const isActive = activeStartLane === lane;
+            return (
+              <button
+                key={`select-lane-${lane}`}
+                disabled={!runData || isAnimating || done}
+                onClick={() => startSingleLaneAnimation(lane)}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
+                  isActive
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : done
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-60'
+                }`}
+              >
+                {names[lane]} {done ? '완료' : ''}
+              </button>
+            );
+          })}
         </div>
       </div>
 
