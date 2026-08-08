@@ -543,28 +543,59 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
     ctx.clearRect(0, 0, BOARD_PX, BOARD_PX);
 
-    const bgGrad = ctx.createLinearGradient(0, 0, BOARD_PX, BOARD_PX);
-    bgGrad.addColorStop(0, '#e8bd6f');
-    bgGrad.addColorStop(0.5, '#dba957');
-    bgGrad.addColorStop(1, '#c8933f');
+    // Pale honey-toned "kaya" wood base with a soft lighting vignette,
+    // like a real Go board photographed under a lamp rather than a flat tint.
+    const bgGrad = ctx.createRadialGradient(
+      BOARD_PX * 0.4,
+      BOARD_PX * 0.35,
+      BOARD_PX * 0.12,
+      BOARD_PX * 0.5,
+      BOARD_PX * 0.5,
+      BOARD_PX * 0.78
+    );
+    bgGrad.addColorStop(0, '#f5d998');
+    bgGrad.addColorStop(0.45, '#e8c078');
+    bgGrad.addColorStop(0.78, '#d3a35c');
+    bgGrad.addColorStop(1, '#b9853f');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, BOARD_PX, BOARD_PX);
 
-    ctx.strokeStyle = 'rgba(120, 76, 24, 0.09)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 34; i += 1) {
-      const y = (i / 34) * BOARD_PX + Math.sin(i * 12.9) * 4;
+    // Layered vertical wood-grain fibers (real kaya grain runs top-to-bottom).
+    const grainTones = ['rgba(133, 88, 30, 0.11)', 'rgba(96, 62, 18, 0.08)', 'rgba(190, 142, 68, 0.10)'];
+    for (let i = 0; i < 46; i += 1) {
+      const x = (i / 46) * BOARD_PX + Math.sin(i * 7.3) * 5;
+      ctx.strokeStyle = grainTones[i % grainTones.length];
+      ctx.lineWidth = i % 3 === 0 ? 1.6 : 1;
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.bezierCurveTo(BOARD_PX * 0.3, y + 6, BOARD_PX * 0.7, y - 6, BOARD_PX, y);
+      ctx.moveTo(x, -4);
+      ctx.bezierCurveTo(x + 10, BOARD_PX * 0.3, x - 8, BOARD_PX * 0.7, x + 4, BOARD_PX + 4);
       ctx.stroke();
     }
 
-    ctx.strokeStyle = 'rgba(90, 58, 20, 0.55)';
-    ctx.lineWidth = 4;
+    // Darker knot-like streaks for extra grain irregularity.
+    ctx.strokeStyle = 'rgba(80, 52, 16, 0.06)';
+    ctx.lineWidth = 3;
+    for (let i = 0; i < 6; i += 1) {
+      const x = (i / 6) * BOARD_PX + 40;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.quadraticCurveTo(x + 18, BOARD_PX * 0.5, x - 6, BOARD_PX);
+      ctx.stroke();
+    }
+
+    // Solid wooden bezel frame around the playing field, like the raised
+    // edge of a real board block, with a warm inner highlight line.
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#7a4d1f';
+    ctx.strokeRect(6, 6, BOARD_PX - 12, BOARD_PX - 12);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 226, 163, 0.55)';
+    ctx.strokeRect(12, 12, BOARD_PX - 24, BOARD_PX - 24);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(74, 46, 14, 0.4)';
     ctx.strokeRect(2, 2, BOARD_PX - 4, BOARD_PX - 4);
 
-    ctx.strokeStyle = 'rgba(59, 35, 11, 0.88)';
+    ctx.strokeStyle = 'rgba(43, 26, 8, 0.9)';
     ctx.lineWidth = 1.4;
     for (let i = 0; i < BOARD_SIZE; i += 1) {
       const p = toPx(i);
@@ -578,7 +609,7 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       ctx.stroke();
     }
 
-    ctx.fillStyle = 'rgba(59, 35, 11, 0.92)';
+    ctx.fillStyle = 'rgba(43, 26, 8, 0.92)';
     HOSHI_POINTS.forEach((pt) => {
       ctx.beginPath();
       ctx.arc(toPx(pt.col), toPx(pt.row), 3.2, 0, Math.PI * 2);
@@ -838,7 +869,7 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               onPointerMove={handleBoardPointerMove}
               onPointerLeave={handleBoardPointerLeave}
               onPointerDown={handleBoardClick}
-              className="flex-1 min-w-0 w-full h-auto rounded-md shadow-inner touch-none cursor-pointer"
+              className="flex-1 min-w-0 w-full h-auto rounded-md shadow-[0_10px_22px_-8px_rgba(90,55,15,0.5)] touch-none cursor-pointer"
               style={{ touchAction: 'none' }}
             />
           </div>
