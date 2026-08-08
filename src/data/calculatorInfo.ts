@@ -196,7 +196,7 @@ export const CALCULATOR_LIST: CalculatorMeta[] = [
     id: 'pregnancy',
     name: '임신 주수 & 출산예정일 계산기',
     shortDesc: '마지막 생리 시작일과 평균 생리주기 기준 현재 임신 주수와 네겔레 법칙 출산예정일 계산',
-    category: 'life',
+    category: 'health',
     iconName: 'Baby',
     popular: true,
   },
