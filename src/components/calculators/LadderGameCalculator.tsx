@@ -193,7 +193,7 @@ const rowToY = (row: number, rowCount: number) => {
   return TOP_PADDING + (row / rowCount) * usableHeight;
 };
 
-const toSvgPoint = (
+const toCanvasPoint = (
   point: Point,
   laneCount: number,
   rowCount: number,
@@ -303,6 +303,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
   const rafRef = useRef<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     return () => {
@@ -501,7 +502,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       for (let lane = 0; lane < laneCount; lane++) {
         const { laneIndex, path } = buildPath(lane, rows);
         finalLaneByStart.push(laneIndex);
-        paths.push(path.map((p) => toSvgPoint(p, laneCount, rowCount, horizontalPadding)));
+        paths.push(path.map((p) => toCanvasPoint(p, laneCount, rowCount, horizontalPadding)));
       }
 
       const movedCount = finalLaneByStart.filter((finalLane, startLane) => finalLane !== startLane).length;
@@ -632,6 +633,91 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       };
     })
     .filter((v): v is { laneIndex: number; point: Point } => v !== null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, LADDER_WIDTH, LADDER_HEIGHT);
+
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    for (let lane = 0; lane < laneCount; lane += 1) {
+      const x = laneToX(lane, laneCount, horizontalPadding);
+      ctx.beginPath();
+      ctx.moveTo(x, rowToY(0, activeRowCount));
+      ctx.lineTo(x, rowToY(activeRowCount, activeRowCount));
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    activeRows.forEach((row, rowIdx) => {
+      row.forEach((hasBridge, laneIdx) => {
+        if (!hasBridge) return;
+        const y = rowToY(rowIdx + 0.5, activeRowCount);
+        const x1 = laneToX(laneIdx, laneCount, horizontalPadding);
+        const x2 = laneToX(laneIdx + 1, laneCount, horizontalPadding);
+        ctx.beginPath();
+        ctx.moveTo(x1, y);
+        ctx.lineTo(x2, y);
+        ctx.stroke();
+      });
+    });
+
+    const paths = runData?.paths ?? [];
+
+    ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+    ctx.lineWidth = 7;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    paths.forEach((path) => {
+      if (path.length === 0) return;
+      ctx.beginPath();
+      ctx.moveTo(path[0].x, path[0].y);
+      for (let i = 1; i < path.length; i += 1) {
+        ctx.lineTo(path[i].x, path[i].y);
+      }
+      ctx.stroke();
+    });
+
+    paths.forEach((path, idx) => {
+      const isRevealed = revealedStartLanes[idx] ?? false;
+      const isActive = activeStartLane === idx;
+      const progress = isActive ? progressByLane[idx] ?? 0 : isRevealed ? 1 : 0;
+      if (progress <= 0) return;
+
+      const partial = getPartialPolyline(path, progress);
+      if (partial.length === 0) return;
+
+      ctx.strokeStyle = isRevealed ? '#22c55e' : '#f97316';
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(partial[0].x, partial[0].y);
+      for (let i = 1; i < partial.length; i += 1) {
+        ctx.lineTo(partial[i].x, partial[i].y);
+      }
+      ctx.stroke();
+    });
+
+    tokenPositions.forEach((token) => {
+      ctx.beginPath();
+      ctx.arc(token.point.x, token.point.y, 11, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(token.laneIndex + 1), token.point.x, token.point.y + 1);
+    });
+  });
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-6">
@@ -766,106 +852,12 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
           <div className="w-full">
-            <svg
-              viewBox={`0 0 ${LADDER_WIDTH} ${LADDER_HEIGHT}`}
-              className="w-full h-[400px] rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
-            >
-              {Array.from({ length: laneCount }, (_, lane) => {
-                const x = laneToX(lane, laneCount, horizontalPadding);
-                return (
-                  <line
-                    key={`vertical-${lane}`}
-                    x1={x}
-                    y1={rowToY(0, activeRowCount)}
-                    x2={x}
-                    y2={rowToY(activeRowCount, activeRowCount)}
-                    stroke="#94a3b8"
-                    strokeWidth={2.4}
-                  />
-                );
-              })}
-
-              {activeRows.map((row, rowIdx) =>
-                row.map((hasBridge, laneIdx) => {
-                  if (!hasBridge) {
-                    return null;
-                  }
-
-                  const y = rowToY(rowIdx + 0.5, activeRowCount);
-                  const x1 = laneToX(laneIdx, laneCount, horizontalPadding);
-                  const x2 = laneToX(laneIdx + 1, laneCount, horizontalPadding);
-
-                  return (
-                    <line
-                      key={`bridge-${rowIdx}-${laneIdx}`}
-                      x1={x1}
-                      y1={y}
-                      x2={x2}
-                      y2={y}
-                      stroke="#3b82f6"
-                      strokeWidth={4}
-                      strokeLinecap="round"
-                    />
-                  );
-                })
-              )}
-
-              {(runData?.paths ?? []).map((path, idx) => {
-                const points = path.map((p) => `${p.x},${p.y}`).join(' ');
-                return (
-                  <polyline
-                    key={`path-${idx}`}
-                    points={points}
-                    fill="none"
-                    stroke="rgba(59,130,246,0.2)"
-                    strokeWidth={7}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                );
-              })}
-
-              {(runData?.paths ?? []).map((path, idx) => {
-                const isRevealed = revealedStartLanes[idx] ?? false;
-                const isActive = activeStartLane === idx;
-                const progress = isActive ? progressByLane[idx] ?? 0 : isRevealed ? 1 : 0;
-
-                if (progress <= 0) {
-                  return null;
-                }
-
-                const partialPath = getPartialPolyline(path, progress);
-                const points = partialPath.map((p) => `${p.x},${p.y}`).join(' ');
-
-                return (
-                  <polyline
-                    key={`traced-${idx}`}
-                    points={points}
-                    fill="none"
-                    stroke={isRevealed ? '#22c55e' : '#f97316'}
-                    strokeWidth={8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                );
-              })}
-
-              {tokenPositions.map((token) => (
-                <g key={`token-${token.laneIndex}`}>
-                  <circle cx={token.point.x} cy={token.point.y} r={11} fill="#0f172a" />
-                  <text
-                    x={token.point.x}
-                    y={token.point.y + 4}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontWeight="700"
-                    fill="#ffffff"
-                  >
-                    {token.laneIndex + 1}
-                  </text>
-                </g>
-              ))}
-            </svg>
+            <canvas
+              ref={canvasRef}
+              width={LADDER_WIDTH}
+              height={LADDER_HEIGHT}
+              className="w-full h-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+            />
 
             <div className="relative mt-3 h-5 overflow-hidden">
               {Array.from({ length: laneCount }, (_, i) => (
