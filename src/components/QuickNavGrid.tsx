@@ -45,6 +45,7 @@ interface Props {
   searchQuery: string;
   favoriteIds: CalculatorId[];
   onToggleFavorite: (id: CalculatorId) => void;
+  onResetFilters: () => void;
 }
 
 export const QuickNavGrid: React.FC<Props> = ({
@@ -54,6 +55,7 @@ export const QuickNavGrid: React.FC<Props> = ({
   searchQuery,
   favoriteIds,
   onToggleFavorite,
+  onResetFilters,
 }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -156,6 +158,12 @@ export const QuickNavGrid: React.FC<Props> = ({
           <p className="text-xs text-gray-400 dark:text-slate-500">
             계산기 카드의 별 아이콘을 눌러 즐겨찾기에 추가해보세요
           </p>
+          <button
+            onClick={onResetFilters}
+            className="mt-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors"
+          >
+            전체 도구 보기
+          </button>
         </div>
       ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

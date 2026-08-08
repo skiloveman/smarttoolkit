@@ -288,6 +288,21 @@ export default function App() {
   const activeGuide = CALCULATOR_GUIDES[activeCalcId];
   const isFavoritesEmpty = activeCategory === 'favorites' && favoriteIds.length === 0;
 
+  const handleSelectCategory = (cat: CalculatorCategory) => {
+    setActiveCategory(cat);
+    setSearchQuery('');
+    const firstInCategory = CALCULATOR_LIST.find(
+      (c) =>
+        cat === 'all' ||
+        c.category === cat ||
+        (cat === 'favorites' && favoriteIds.includes(c.id))
+    );
+    if (firstInCategory) {
+      navigateToCalc(firstInCategory.id);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Render Active Calculator Widget
   const renderCalculator = () => {
     switch (activeCalcId) {
@@ -386,20 +401,7 @@ export default function App() {
         {/* Header Navigation */}
         <Header
           activeCategory={activeCategory}
-          onSelectCategory={(cat) => {
-            setActiveCategory(cat);
-            setSearchQuery('');
-            const firstInCategory = CALCULATOR_LIST.find(
-              (c) =>
-                cat === 'all' ||
-                c.category === cat ||
-                (cat === 'favorites' && favoriteIds.includes(c.id))
-            );
-            if (firstInCategory) {
-              navigateToCalc(firstInCategory.id);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
+          onSelectCategory={handleSelectCategory}
           activeCalcId={activeCalcId}
           onSelectCalc={(id) => {
             navigateToCalc(id);
@@ -483,6 +485,7 @@ export default function App() {
             searchQuery={searchQuery}
             favoriteIds={favoriteIds}
             onToggleFavorite={toggleFavorite}
+            onResetFilters={() => handleSelectCategory('all')}
           />
         </main>
       </div>
