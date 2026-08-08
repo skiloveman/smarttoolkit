@@ -9,10 +9,19 @@ interface Props {
   history: CalculationHistoryItem[];
   onClearHistory: () => void;
   onSelectHistory: (item: CalculationHistoryItem) => void;
+  onDeleteHistoryItem: (id: string) => void;
   latestSavedHistoryId: string | null;
 }
 
-export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, onClearHistory, onSelectHistory, latestSavedHistoryId }) => {
+export const RecentHistoryModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  history,
+  onClearHistory,
+  onSelectHistory,
+  onDeleteHistoryItem,
+  latestSavedHistoryId,
+}) => {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -103,7 +112,7 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
                   ))}
                 </div>
 
-                <div className="flex justify-end pt-1">
+                <div className="flex justify-end items-center gap-3 pt-1">
                   <button
                     type="button"
                     onClick={(event) => {
@@ -123,6 +132,17 @@ export const RecentHistoryModal: React.FC<Props> = ({ isOpen, onClose, history, 
                         <span>복사</span>
                       </>
                     )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDeleteHistoryItem(item.id);
+                    }}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>삭제</span>
                   </button>
                 </div>
               </div>

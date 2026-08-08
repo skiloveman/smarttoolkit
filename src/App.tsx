@@ -270,6 +270,18 @@ export default function App() {
     localStorage.removeItem('calc_history');
   };
 
+  const handleDeleteHistoryItem = (id: string) => {
+    setHistory((prev) => {
+      const updated = prev.filter((item) => item.id !== id);
+      try {
+        localStorage.setItem('calc_history', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to update history', e);
+      }
+      return updated;
+    });
+  };
+
   const handleSelectHistory = (item: CalculationHistoryItem) => {
     const calcMeta = CALCULATOR_LIST.find((calc) => calc.id === item.calculatorId);
 
@@ -535,6 +547,7 @@ export default function App() {
         history={history}
         onClearHistory={handleClearHistory}
         onSelectHistory={handleSelectHistory}
+        onDeleteHistoryItem={handleDeleteHistoryItem}
         latestSavedHistoryId={latestSavedHistoryId}
       />
     </div>
