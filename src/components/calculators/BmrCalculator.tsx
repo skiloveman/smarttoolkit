@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Activity } from 'lucide-react';
-import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
@@ -12,8 +11,8 @@ interface Props {
 export const BmrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [age, setAge] = useState(30);
-  const [heightCm, setHeightCm] = useState(175);
+  const [age, setAge] = useState(50);
+  const [heightCm, setHeightCm] = useState(170);
   const [weightKg, setWeightKg] = useState(70);
   const [saved, setSaved] = useState(false);
 
@@ -63,32 +62,55 @@ export const BmrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         <button onClick={handleSave} className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap" title="계산기록에서 다시 가져올 수 있습니다.">기록저장</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-5">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">성별</label>
-          <div className="flex gap-2">
-            <button onClick={() => setGender('male')} className={`px-3 py-2 rounded-lg text-xs font-semibold ${gender === 'male' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'}`}>
-              남성
+          <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 text-xs font-semibold">
+            <button onClick={() => setGender('male')} className={`px-3 py-1.5 rounded-md transition-all ${gender === 'male' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}>
+              남성 ♂
             </button>
-            <button onClick={() => setGender('female')} className={`px-3 py-2 rounded-lg text-xs font-semibold ${gender === 'female' ? 'bg-pink-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'}`}>
-              여성
+            <button onClick={() => setGender('female')} className={`px-3 py-1.5 rounded-md transition-all ${gender === 'female' ? 'bg-white dark:bg-slate-700 text-pink-600 dark:text-pink-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}>
+              여성 ♀
             </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">나이</label>
-          <DefaultValueInput type="number" value={age} defaultValueLabel={30} onValueChange={(value) => setAge(Number(value) || 0)} onBlur={() => setAge((prev) => Math.max(10, Math.min(100, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>나이</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{age}세</span>
+          </div>
+          <input type="range" min="10" max="100" value={age} onChange={(e) => setAge(Number(e.target.value))} className="w-full accent-emerald-500 cursor-pointer" />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (cm)</label>
-          <DefaultValueInput type="number" value={heightCm} defaultValueLabel={175} onValueChange={(value) => setHeightCm(Number(value) || 0)} onBlur={() => setHeightCm((prev) => Math.max(100, Math.min(230, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>신장 (키)</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{heightCm} cm</span>
+          </div>
+          <input type="range" min="100" max="230" value={heightCm} onChange={(e) => setHeightCm(Number(e.target.value))} className="w-full accent-emerald-500 cursor-pointer" />
+          <div className="mt-2 flex justify-between gap-2">
+            {[155, 165, 172, 180, 188].map((h) => (
+              <button key={h} onClick={() => setHeightCm(h)} className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                {h}cm
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (kg)</label>
-          <DefaultValueInput type="number" value={weightKg} defaultValueLabel={70} onValueChange={(value) => setWeightKg(Number(value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>체중 (몸무게)</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{weightKg} kg</span>
+          </div>
+          <input type="range" min="20" max="250" value={weightKg} onChange={(e) => setWeightKg(Number(e.target.value))} className="w-full accent-emerald-500 cursor-pointer" />
+          <div className="mt-2 flex justify-between gap-2">
+            {[50, 60, 70, 80, 90].map((w) => (
+              <button key={w} onClick={() => setWeightKg(w)} className={`px-2 py-1 rounded text-[11px] font-medium ${weightKg === w ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                {w}kg
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

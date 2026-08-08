@@ -11,8 +11,8 @@ interface Props {
 export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
   const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [age, setAge] = useState<number>(30);
-  const [heightCm, setHeightCm] = useState<number>(175);
+  const [age, setAge] = useState<number>(50);
+  const [heightCm, setHeightCm] = useState<number>(170);
   const [weightKg, setWeightKg] = useState<number>(70);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);

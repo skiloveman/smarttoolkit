@@ -20,6 +20,10 @@ import {
   Clock,
   Car,
   Building2,
+  Cake,
+  Wine,
+  Baby,
+  BatteryCharging,
 } from 'lucide-react';
 
 interface Props {
@@ -62,6 +66,14 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, on
         return <Car className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       case 'Building2':
         return <Building2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
+      case 'Cake':
+        return <Cake className="w-5 h-5 text-rose-600 dark:text-rose-400" />;
+      case 'Wine':
+        return <Wine className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
+      case 'Baby':
+        return <Baby className="w-5 h-5 text-pink-600 dark:text-pink-400" />;
+      case 'BatteryCharging':
+        return <BatteryCharging className="w-5 h-5 text-lime-600 dark:text-lime-400" />;
       default:
         return <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
     }

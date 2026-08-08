@@ -27,7 +27,11 @@ export type CalculatorId =
   | 'realEstate'
   | 'ladderGame'
   | 'gomoku'
-  | 'watermelonGame';
+  | 'watermelonGame'
+  | 'koreanAge'
+  | 'bloodAlcohol'
+  | 'pregnancy'
+  | 'evCharging';
 
 export interface CalculatorMeta {
   id: CalculatorId;

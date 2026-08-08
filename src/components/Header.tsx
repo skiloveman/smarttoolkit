@@ -23,6 +23,10 @@ import {
   Clock,
   Car,
   Building2,
+  Cake,
+  Wine,
+  Baby,
+  BatteryCharging,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -82,6 +86,14 @@ export const Header: React.FC<HeaderProps> = ({
         return <Car className="w-4 h-4" />;
       case 'Building2':
         return <Building2 className="w-4 h-4" />;
+      case 'Cake':
+        return <Cake className="w-4 h-4" />;
+      case 'Wine':
+        return <Wine className="w-4 h-4" />;
+      case 'Baby':
+        return <Baby className="w-4 h-4" />;
+      case 'BatteryCharging':
+        return <BatteryCharging className="w-4 h-4" />;
       default:
         return <Calculator className="w-4 h-4" />;
     }

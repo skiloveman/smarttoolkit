@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Droplets } from 'lucide-react';
-import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { formatNum } from '../../utils/calculators';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
@@ -63,15 +62,28 @@ export const WaterIntakeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         <button onClick={handleSave} className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold whitespace-nowrap" title="계산기록에서 다시 가져올 수 있습니다.">기록저장</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-5">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (kg)</label>
-          <DefaultValueInput type="number" value={weightKg} defaultValueLabel={70} onValueChange={(value) => setWeightKg(Number(value) || 0)} onBlur={() => setWeightKg((prev) => Math.max(20, Math.min(250, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>체중 (몸무게)</span>
+            <span className="font-bold text-cyan-600 dark:text-cyan-400">{weightKg} kg</span>
+          </div>
+          <input type="range" min="20" max="250" value={weightKg} onChange={(e) => setWeightKg(Number(e.target.value))} className="w-full accent-cyan-500 cursor-pointer" />
+          <div className="mt-2 flex justify-between gap-2">
+            {[50, 60, 70, 80, 90].map((w) => (
+              <button key={w} onClick={() => setWeightKg(w)} className={`px-2 py-1 rounded text-[11px] font-medium ${weightKg === w ? 'bg-cyan-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                {w}kg
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">하루 운동 시간 (분)</label>
-          <DefaultValueInput type="number" value={exerciseMinutes} defaultValueLabel={30} onValueChange={(value) => setExerciseMinutes(Number(value) || 0)} onBlur={() => setExerciseMinutes((prev) => Math.max(0, Math.min(600, prev || 0)))} className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100" />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>하루 운동 시간</span>
+            <span className="font-bold text-cyan-600 dark:text-cyan-400">{exerciseMinutes}분</span>
+          </div>
+          <input type="range" min="0" max="600" value={exerciseMinutes} onChange={(e) => setExerciseMinutes(Number(e.target.value))} className="w-full accent-cyan-500 cursor-pointer" />
         </div>
       </div>
 

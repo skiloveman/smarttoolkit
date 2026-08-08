@@ -40,6 +40,10 @@ const RealEstateCalculator = lazy(() => import('./components/calculators/RealEst
 const LadderGameCalculator = lazy(() => import('./components/calculators/LadderGameCalculator').then((module) => ({ default: module.LadderGameCalculator })));
 const GomokuCalculator = lazy(() => import('./components/calculators/GomokuCalculator').then((module) => ({ default: module.GomokuCalculator })));
 const WatermelonGameCalculator = lazy(() => import('./components/calculators/WatermelonGameCalculator').then((module) => ({ default: module.WatermelonGameCalculator })));
+const KoreanAgeCalculator = lazy(() => import('./components/calculators/KoreanAgeCalculator').then((module) => ({ default: module.KoreanAgeCalculator })));
+const BloodAlcoholCalculator = lazy(() => import('./components/calculators/BloodAlcoholCalculator').then((module) => ({ default: module.BloodAlcoholCalculator })));
+const PregnancyCalculator = lazy(() => import('./components/calculators/PregnancyCalculator').then((module) => ({ default: module.PregnancyCalculator })));
+const EvChargingCalculator = lazy(() => import('./components/calculators/EvChargingCalculator').then((module) => ({ default: module.EvChargingCalculator })));
 
 const calculatorLoadingFallback = (
   <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
@@ -226,6 +230,14 @@ export default function App() {
         return <GomokuCalculator onSaveHistory={saveToHistory} />;
       case 'watermelonGame':
         return <WatermelonGameCalculator onSaveHistory={saveToHistory} />;
+      case 'koreanAge':
+        return <KoreanAgeCalculator onSaveHistory={saveToHistory} />;
+      case 'bloodAlcohol':
+        return <BloodAlcoholCalculator onSaveHistory={saveToHistory} />;
+      case 'pregnancy':
+        return <PregnancyCalculator onSaveHistory={saveToHistory} />;
+      case 'evCharging':
+        return <EvChargingCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }

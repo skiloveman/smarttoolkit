@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Percent } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
-import { DefaultValueInput } from '../DefaultValueInput';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
 
 interface Props {
@@ -91,55 +90,33 @@ export const WhrCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         >기록저장</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-5">
         <div>
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">성별</label>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setGender('male')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold ${
-                gender === 'male' ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
-              }`}
-            >
-              남성
+          <div className="inline-flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 text-xs font-semibold">
+            <button onClick={() => setGender('male')} className={`px-3 py-1.5 rounded-md transition-all ${gender === 'male' ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}>
+              남성 ♂
             </button>
-            <button
-              onClick={() => setGender('female')}
-              className={`px-3 py-2 rounded-lg text-xs font-semibold ${
-                gender === 'female' ? 'bg-pink-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600'
-              }`}
-            >
-              여성
+            <button onClick={() => setGender('female')} className={`px-3 py-1.5 rounded-md transition-all ${gender === 'female' ? 'bg-white dark:bg-slate-700 text-pink-600 dark:text-pink-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'}`}>
+              여성 ♀
             </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">허리둘레 (cm)</label>
-          <DefaultValueInput
-            type="number"
-            value={waistCm}
-            min={30}
-            max={220}
-            defaultValueLabel={82}
-            onValueChange={(value) => setWaistCm(Number(value) || 0)}
-            onBlur={() => setWaistCm((prev) => Math.max(30, Math.min(220, prev || 0)))}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
-          />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>허리둘레</span>
+            <span className="font-bold text-indigo-600 dark:text-indigo-400">{waistCm} cm</span>
+          </div>
+          <input type="range" min="30" max="220" value={waistCm} onChange={(e) => setWaistCm(Number(e.target.value))} className="w-full accent-indigo-500 cursor-pointer" />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">엉덩이둘레 (cm)</label>
-          <DefaultValueInput
-            type="number"
-            value={hipCm}
-            min={30}
-            max={220}
-            defaultValueLabel={95}
-            onValueChange={(value) => setHipCm(Number(value) || 0)}
-            onBlur={() => setHipCm((prev) => Math.max(30, Math.min(220, prev || 0)))}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/60 p-2.5 text-sm font-bold text-slate-800 dark:text-slate-100"
-          />
+          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            <span>엉덩이둘레</span>
+            <span className="font-bold text-indigo-600 dark:text-indigo-400">{hipCm} cm</span>
+          </div>
+          <input type="range" min="30" max="220" value={hipCm} onChange={(e) => setHipCm(Number(e.target.value))} className="w-full accent-indigo-500 cursor-pointer" />
         </div>
       </div>
 
