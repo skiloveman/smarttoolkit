@@ -27,7 +27,24 @@ import {
   Wine,
   Baby,
   BatteryCharging,
+  LayoutGrid,
+  HeartPulse,
+  Wrench,
+  Gamepad2,
 } from 'lucide-react';
+
+const CATEGORY_TABS: {
+  id: CalculatorCategory;
+  baseLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { id: 'all', baseLabel: 'ALL TOOLS', icon: LayoutGrid },
+  { id: 'favorites', baseLabel: '즐겨찾기', icon: Star },
+  { id: 'finance', baseLabel: 'FINANCE', icon: Landmark },
+  { id: 'health', baseLabel: 'HEALTH', icon: HeartPulse },
+  { id: 'life', baseLabel: 'UTILITIES', icon: Wrench },
+  { id: 'games', baseLabel: 'GAMES', icon: Gamepad2 },
+];
 
 interface HeaderProps {
   activeCategory: CalculatorCategory;
@@ -178,32 +195,30 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Category Tabs */}
-        <nav className="flex items-center gap-6 overflow-x-auto py-2.5 border-t border-gray-100 dark:border-slate-800/80 no-scrollbar text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">
-          {[
-            { id: 'all', label: 'ALL TOOLS' },
-            { id: 'favorites', label: `즐겨찾기${favoriteIds.length > 0 ? ` (${favoriteIds.length})` : ''}` },
-            { id: 'finance', label: 'FINANCE' },
-            { id: 'health', label: 'HEALTH' },
-            { id: 'life', label: 'UTILITIES' },
-            { id: 'games', label: 'GAMES' },
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => onSelectCategory(cat.id as CalculatorCategory)}
-              className={`flex items-center gap-1 py-1 transition-all whitespace-nowrap cursor-pointer border-b-2 ${
-                activeCategory === cat.id
-                  ? 'text-blue-600 dark:text-blue-400 font-bold border-blue-600 dark:border-blue-400'
-                  : 'border-transparent hover:text-gray-900 dark:hover:text-slate-200'
-              }`}
-            >
-              {cat.id === 'favorites' && (
-                <Star
-                  className={`w-3.5 h-3.5 ${activeCategory === 'favorites' ? 'fill-current' : ''}`}
-                />
-              )}
-              {cat.label}
-            </button>
-          ))}
+        <nav className="flex items-center gap-2 overflow-x-auto py-3 border-t border-gray-100 dark:border-slate-800/80 no-scrollbar">
+          {CATEGORY_TABS.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = activeCategory === cat.id;
+            const label =
+              cat.id === 'favorites' && favoriteIds.length > 0
+                ? `${cat.baseLabel} (${favoriteIds.length})`
+                : cat.baseLabel;
+
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onSelectCategory(cat.id)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full whitespace-nowrap transition-all cursor-pointer text-xs font-bold uppercase tracking-wider ${
+                  isActive
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
+                    : 'bg-gray-50 dark:bg-slate-800/60 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-slate-200'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${cat.id === 'favorites' && isActive ? 'fill-current' : ''}`} />
+                {label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Quick Horizontal Calculator List */}
