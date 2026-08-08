@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalculationHistoryItem } from '../types';
-import { X, History, Trash2, Copy, Check } from 'lucide-react';
+import { X, History, Trash2, Copy, Check, RotateCcw } from 'lucide-react';
 import { formatYmd } from '../utils/calculators';
 
 interface Props {
@@ -68,16 +68,7 @@ export const RecentHistoryModal: React.FC<Props> = ({
               return (
               <div
                 key={item.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => onSelectHistory(item)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    onSelectHistory(item);
-                  }
-                }}
-                className={`w-full text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border space-y-2 relative group hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors ${
+                className={`w-full text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border space-y-2 relative transition-colors ${
                   isFreshlySaved
                     ? 'border-emerald-300 dark:border-emerald-700 shadow-lg shadow-emerald-500/10 animate-[historySavedPulse_1.2s_ease-out_2]'
                     : 'border-slate-200/80 dark:border-slate-800'
@@ -112,38 +103,43 @@ export const RecentHistoryModal: React.FC<Props> = ({
                   ))}
                 </div>
 
-                <div className="flex justify-end items-center gap-3 pt-1">
+                <div className="flex items-center justify-between gap-3 pt-1">
                   <button
                     type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleCopyItem(item);
-                    }}
-                    className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1"
+                    onClick={() => onSelectHistory(item)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors"
                   >
-                    {copiedId === item.id ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-500" />
-                        <span>복사됨</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        <span>복사</span>
-                      </>
-                    )}
+                    <RotateCcw className="w-3 h-3" />
+                    <span>결과적용</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDeleteHistoryItem(item.id);
-                    }}
-                    className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 flex items-center gap-1"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>삭제</span>
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyItem(item)}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 flex items-center gap-1"
+                    >
+                      {copiedId === item.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span>복사됨</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>복사</span>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteHistoryItem(item.id)}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-rose-600 flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>삭제</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )})
