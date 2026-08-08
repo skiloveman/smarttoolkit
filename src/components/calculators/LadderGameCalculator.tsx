@@ -779,17 +779,45 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/40 p-4 overflow-x-hidden">
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">사다리</h4>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
+            {activeStartLane !== null
+              ? `${names[activeStartLane]} 진행 중...`
+              : runData
+              ? '이름을 눌러 내려보세요'
+              : '먼저 사다리를 생성해 주세요'}
+          </span>
+        </div>
+
         <div className="w-full max-w-[720px] mx-auto">
           <div className="relative mb-2 h-5 overflow-hidden">
-            {Array.from({ length: laneCount }, (_, i) => (
-              <div
-                key={`top-name-tag-${i}`}
-                className="absolute -translate-x-1/2 text-center text-xs font-bold text-slate-700 dark:text-slate-300 truncate"
-                style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
-              >
-                {names[i]}
-              </div>
-            ))}
+            {Array.from({ length: laneCount }, (_, i) => {
+              const done = revealedStartLanes[i] ?? false;
+              const isActive = activeStartLane === i;
+              return (
+                <button
+                  key={`top-name-tag-${i}`}
+                  type="button"
+                  disabled={!runData || isAnimating || done}
+                  onClick={() => startSingleLaneAnimation(i)}
+                  title={runData && !done ? `${names[i]} 내려보기` : undefined}
+                  className={`absolute -translate-x-1/2 text-center text-xs font-bold truncate transition-colors disabled:cursor-default ${
+                    isActive
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : done
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : runData
+                      ? 'text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'
+                      : 'text-slate-700 dark:text-slate-300 cursor-default'
+                  }`}
+                  style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(500 / laneCount))}px` }}
+                >
+                  {names[i]}
+                  {done ? ' ✓' : ''}
+                </button>
+              );
+            })}
           </div>
 
           <canvas
@@ -810,42 +838,6 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">참가자 선택</h4>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400">
-            {activeStartLane !== null
-              ? `${names[activeStartLane]} 진행 중...`
-              : runData
-              ? '원하는 참가자를 눌러 내려보세요'
-              : '먼저 사다리를 생성해 주세요'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-          {Array.from({ length: laneCount }, (_, lane) => {
-            const done = revealedStartLanes[lane] ?? false;
-            const isActive = activeStartLane === lane;
-            return (
-              <button
-                key={`select-lane-${lane}`}
-                disabled={!runData || isAnimating || done}
-                onClick={() => startSingleLaneAnimation(lane)}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : done
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 disabled:opacity-60'
-                }`}
-              >
-                {names[lane]} {done ? '완료' : ''}
-              </button>
-            );
-          })}
         </div>
       </div>
 
