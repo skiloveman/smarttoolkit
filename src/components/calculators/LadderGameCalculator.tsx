@@ -843,10 +843,10 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             type="button"
             onClick={toggleSound}
             title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-            className="inline-flex items-center justify-center p-1.5 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 text-[11px] font-semibold transition-colors"
           >
             {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <span>{soundEnabled ? 'Sound ON' : 'Sound OFF'}</span>
           </button>
           <span className="text-[11px] text-slate-300">
             {activeStartLane !== null

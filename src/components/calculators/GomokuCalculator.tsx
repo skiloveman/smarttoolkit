@@ -733,10 +733,10 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           type="button"
           onClick={toggleSound}
           title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-          aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"
+          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 text-xs font-semibold"
         >
           {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          <span>{soundEnabled ? 'Sound ON' : 'Sound OFF'}</span>
         </button>
 
         <button
