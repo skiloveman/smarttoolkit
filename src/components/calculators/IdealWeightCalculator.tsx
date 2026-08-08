@@ -13,6 +13,8 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [gender, setGender] = useState<'male' | 'female'>('male');
   const [heightCm, setHeightCm] = useState(170);
   const [currentWeightKg, setCurrentWeightKg] = useState(70);
+  const [heightText, setHeightText] = useState('170');
+  const [weightText, setWeightText] = useState('70');
   const [saved, setSaved] = useState(false);
 
   const { idealWeight, minWeight, maxWeight, diff } = useMemo(() => {
@@ -38,6 +40,8 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setGender(restored.gender);
     setHeightCm(restored.heightCm);
     setCurrentWeightKg(restored.currentWeightKg);
+    setHeightText(String(restored.heightCm));
+    setWeightText(String(restored.currentWeightKg));
   });
 
   const handleSave = () => {
@@ -91,15 +95,34 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={1}
               max={250}
-              value={heightCm}
-              onChange={(e) => setHeightCm(Math.max(0, Number(e.target.value) || 0))}
+              value={heightText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setHeightText(raw);
+                if (raw.trim() === '') return;
+                const n = Number(raw);
+                if (!Number.isNaN(n)) setHeightCm(Math.max(0, n));
+              }}
+              onBlur={() => {
+                if (heightText.trim() === '') {
+                  setHeightText('170');
+                  setHeightCm(170);
+                }
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">cm</span>
           </div>
           <div className="mt-2 flex justify-between gap-2">
             {[155, 165, 172, 180, 188].map((h) => (
-              <button key={h} onClick={() => setHeightCm(h)} className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <button
+                key={h}
+                onClick={() => {
+                  setHeightCm(h);
+                  setHeightText(String(h));
+                }}
+                className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+              >
                 {h}cm
               </button>
             ))}
@@ -113,15 +136,34 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={1}
               max={300}
-              value={currentWeightKg}
-              onChange={(e) => setCurrentWeightKg(Math.max(0, Number(e.target.value) || 0))}
+              value={weightText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setWeightText(raw);
+                if (raw.trim() === '') return;
+                const n = Number(raw);
+                if (!Number.isNaN(n)) setCurrentWeightKg(Math.max(0, n));
+              }}
+              onBlur={() => {
+                if (weightText.trim() === '') {
+                  setWeightText('70');
+                  setCurrentWeightKg(70);
+                }
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
           </div>
           <div className="mt-2 flex justify-between gap-2">
             {[50, 60, 70, 80, 90].map((w) => (
-              <button key={w} onClick={() => setCurrentWeightKg(w)} className={`px-2 py-1 rounded text-[11px] font-medium ${currentWeightKg === w ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <button
+                key={w}
+                onClick={() => {
+                  setCurrentWeightKg(w);
+                  setWeightText(String(w));
+                }}
+                className={`px-2 py-1 rounded text-[11px] font-medium ${currentWeightKg === w ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+              >
                 {w}kg
               </button>
             ))}

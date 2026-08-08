@@ -24,6 +24,9 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [age, setAge] = useState(50);
   const [heightCm, setHeightCm] = useState(170);
   const [weightKg, setWeightKg] = useState(70);
+  const [ageText, setAgeText] = useState('50');
+  const [heightText, setHeightText] = useState('170');
+  const [weightText, setWeightText] = useState('70');
   const [activity, setActivity] = useState<ActivityId>('moderate');
   const [saved, setSaved] = useState(false);
 
@@ -53,6 +56,9 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setHeightCm(restored.heightCm);
     setWeightKg(restored.weightKg);
     setActivity(restored.activity);
+    setAgeText(String(restored.age));
+    setHeightText(String(restored.heightCm));
+    setWeightText(String(restored.weightKg));
   });
 
   const handleSave = () => {
@@ -105,8 +111,20 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={1}
               max={120}
-              value={age}
-              onChange={(e) => setAge(Math.max(0, Number(e.target.value) || 0))}
+              value={ageText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setAgeText(raw);
+                if (raw.trim() === '') return;
+                const n = Number(raw);
+                if (!Number.isNaN(n)) setAge(Math.max(0, n));
+              }}
+              onBlur={() => {
+                if (ageText.trim() === '') {
+                  setAgeText('50');
+                  setAge(50);
+                }
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none transition-all pr-10"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">세</span>
@@ -120,15 +138,34 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={1}
               max={250}
-              value={heightCm}
-              onChange={(e) => setHeightCm(Math.max(0, Number(e.target.value) || 0))}
+              value={heightText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setHeightText(raw);
+                if (raw.trim() === '') return;
+                const n = Number(raw);
+                if (!Number.isNaN(n)) setHeightCm(Math.max(0, n));
+              }}
+              onBlur={() => {
+                if (heightText.trim() === '') {
+                  setHeightText('170');
+                  setHeightCm(170);
+                }
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none transition-all pr-12"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">cm</span>
           </div>
           <div className="mt-2 flex justify-between gap-2">
             {[155, 165, 172, 180, 188].map((h) => (
-              <button key={h} onClick={() => setHeightCm(h)} className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <button
+                key={h}
+                onClick={() => {
+                  setHeightCm(h);
+                  setHeightText(String(h));
+                }}
+                className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+              >
                 {h}cm
               </button>
             ))}
@@ -142,15 +179,34 @@ export const TdeeCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               type="number"
               min={1}
               max={300}
-              value={weightKg}
-              onChange={(e) => setWeightKg(Math.max(0, Number(e.target.value) || 0))}
+              value={weightText}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setWeightText(raw);
+                if (raw.trim() === '') return;
+                const n = Number(raw);
+                if (!Number.isNaN(n)) setWeightKg(Math.max(0, n));
+              }}
+              onBlur={() => {
+                if (weightText.trim() === '') {
+                  setWeightText('70');
+                  setWeightKg(70);
+                }
+              }}
               className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none transition-all pr-12"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
           </div>
           <div className="mt-2 flex justify-between gap-2">
             {[50, 60, 70, 80, 90].map((w) => (
-              <button key={w} onClick={() => setWeightKg(w)} className={`px-2 py-1 rounded text-[11px] font-medium ${weightKg === w ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
+              <button
+                key={w}
+                onClick={() => {
+                  setWeightKg(w);
+                  setWeightText(String(w));
+                }}
+                className={`px-2 py-1 rounded text-[11px] font-medium ${weightKg === w ? 'bg-amber-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+              >
                 {w}kg
               </button>
             ))}
