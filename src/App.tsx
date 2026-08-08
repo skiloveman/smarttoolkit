@@ -253,6 +253,14 @@ export default function App() {
       } catch (e) {
         console.error('Failed to save favorites', e);
       }
+
+      if (activeCategory === 'favorites' && !updated.includes(activeCalcId)) {
+        const firstFavorite = CALCULATOR_LIST.find((c) => updated.includes(c.id));
+        if (firstFavorite) {
+          navigateToCalc(firstFavorite.id);
+        }
+      }
+
       return updated;
     });
   };
@@ -278,6 +286,7 @@ export default function App() {
 
   const activeCalcMeta = CALCULATOR_LIST.find((c) => c.id === activeCalcId) || CALCULATOR_LIST[0];
   const activeGuide = CALCULATOR_GUIDES[activeCalcId];
+  const isFavoritesEmpty = activeCategory === 'favorites' && favoriteIds.length === 0;
 
   // Render Active Calculator Widget
   const renderCalculator = () => {
@@ -408,56 +417,60 @@ export default function App() {
 
         {/* Main Content Container */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-          {/* Top Banner & Title Box */}
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div className="max-w-2xl space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-                {activeCalcMeta.name}
-              </h2>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
-                {activeCalcMeta.shortDesc}
-              </p>
+          {!isFavoritesEmpty && (
+            <>
+              {/* Top Banner & Title Box */}
+              <div className="rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <div className="max-w-2xl space-y-2">
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {activeCalcMeta.name}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-slate-400 leading-relaxed">
+                    {activeCalcMeta.shortDesc}
+                  </p>
 
-              <div className="flex flex-wrap gap-4 pt-2 text-xs font-medium text-gray-600 dark:text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>실시간 자동 산출</span>
+                  <div className="flex flex-wrap gap-4 pt-2 text-xs font-medium text-gray-600 dark:text-slate-400">
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>실시간 자동 산출</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>개인정보 미저장 안전 도구</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>개인정보 미저장 안전 도구</span>
+
+                <div className="shrink-0 flex sm:flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      const widget = document.getElementById('calculator-widget');
+                      widget?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full sm:w-auto bg-gray-900 hover:bg-black dark:bg-slate-100 dark:hover:bg-white dark:text-gray-900 text-white px-5 py-2.5 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors shadow-2xs"
+                  >
+                    계산기 바로 시작
+                  </button>
                 </div>
               </div>
-            </div>
 
-            <div className="shrink-0 flex sm:flex-col gap-2">
-              <button
-                onClick={() => {
-                  const widget = document.getElementById('calculator-widget');
-                  widget?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="w-full sm:w-auto bg-gray-900 hover:bg-black dark:bg-slate-100 dark:hover:bg-white dark:text-gray-900 text-white px-5 py-2.5 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors shadow-2xs"
-              >
-                계산기 바로 시작
-              </button>
-            </div>
-          </div>
+              {/* Top AdSense Banner Placeholder */}
+              <AdSenseBanner slotType="header" />
 
-          {/* Top AdSense Banner Placeholder */}
-          <AdSenseBanner slotType="header" />
+              {/* Active Calculator Widget Area */}
+              <section className="scroll-mt-24" id="calculator-widget">
+                <Suspense fallback={calculatorLoadingFallback}>
+                  <div key={`${activeCalcId}-${calculatorRenderNonce}`}>{renderCalculator()}</div>
+                </Suspense>
+              </section>
 
-          {/* Active Calculator Widget Area */}
-          <section className="scroll-mt-24" id="calculator-widget">
-            <Suspense fallback={calculatorLoadingFallback}>
-              <div key={`${activeCalcId}-${calculatorRenderNonce}`}>{renderCalculator()}</div>
-            </Suspense>
-          </section>
+              {/* Middle Content AdSense Banner */}
+              <AdSenseBanner slotType="inline" />
 
-          {/* Middle Content AdSense Banner */}
-          <AdSenseBanner slotType="inline" />
-
-          {/* Detailed Educational Guide & FAQ Article Card for AdSense SEO Quality */}
-          {activeGuide && <CalculatorGuideCard guide={activeGuide} />}
+              {/* Detailed Educational Guide & FAQ Article Card for AdSense SEO Quality */}
+              {activeGuide && <CalculatorGuideCard guide={activeGuide} />}
+            </>
+          )}
 
           {/* Quick Calculator Switcher Grid */}
           <QuickNavGrid
