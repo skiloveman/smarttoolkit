@@ -31,7 +31,18 @@ export type CalculatorId =
   | 'koreanAge'
   | 'bloodAlcohol'
   | 'pregnancy'
-  | 'evCharging';
+  | 'evCharging'
+  | 'savingsInterest'
+  | 'yearEndTax'
+  | 'nationalPension'
+  | 'housingSubscription'
+  | 'ovulation'
+  | 'sleepCycle'
+  | 'exerciseCalorie'
+  | 'billSplit'
+  | 'giftMoney'
+  | 'movingCost'
+  | 'timeZone';
 
 export interface CalculatorMeta {
   id: CalculatorId;

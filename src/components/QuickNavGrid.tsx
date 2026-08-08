@@ -24,6 +24,17 @@ import {
   Wine,
   Baby,
   BatteryCharging,
+  PiggyBank,
+  FileText,
+  HandCoins,
+  Key,
+  Flower2,
+  Moon,
+  Dumbbell,
+  Users,
+  Gift,
+  Truck,
+  Globe,
 } from 'lucide-react';
 
 interface Props {
@@ -74,6 +85,28 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, on
         return <Baby className="w-5 h-5 text-pink-600 dark:text-pink-400" />;
       case 'BatteryCharging':
         return <BatteryCharging className="w-5 h-5 text-lime-600 dark:text-lime-400" />;
+      case 'PiggyBank':
+        return <PiggyBank className="w-5 h-5 text-rose-600 dark:text-rose-400" />;
+      case 'FileText':
+        return <FileText className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />;
+      case 'HandCoins':
+        return <HandCoins className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+      case 'Key':
+        return <Key className="w-5 h-5 text-violet-600 dark:text-violet-400" />;
+      case 'Flower2':
+        return <Flower2 className="w-5 h-5 text-pink-600 dark:text-pink-400" />;
+      case 'Moon':
+        return <Moon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
+      case 'Dumbbell':
+        return <Dumbbell className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
+      case 'Users':
+        return <Users className="w-5 h-5 text-sky-600 dark:text-sky-400" />;
+      case 'Gift':
+        return <Gift className="w-5 h-5 text-red-600 dark:text-red-400" />;
+      case 'Truck':
+        return <Truck className="w-5 h-5 text-orange-600 dark:text-orange-400" />;
+      case 'Globe':
+        return <Globe className="w-5 h-5 text-teal-600 dark:text-teal-400" />;
       default:
         return <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
     }

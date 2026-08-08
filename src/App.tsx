@@ -44,6 +44,17 @@ const KoreanAgeCalculator = lazy(() => import('./components/calculators/KoreanAg
 const BloodAlcoholCalculator = lazy(() => import('./components/calculators/BloodAlcoholCalculator').then((module) => ({ default: module.BloodAlcoholCalculator })));
 const PregnancyCalculator = lazy(() => import('./components/calculators/PregnancyCalculator').then((module) => ({ default: module.PregnancyCalculator })));
 const EvChargingCalculator = lazy(() => import('./components/calculators/EvChargingCalculator').then((module) => ({ default: module.EvChargingCalculator })));
+const SavingsInterestCalculator = lazy(() => import('./components/calculators/SavingsInterestCalculator').then((module) => ({ default: module.SavingsInterestCalculator })));
+const YearEndTaxCalculator = lazy(() => import('./components/calculators/YearEndTaxCalculator').then((module) => ({ default: module.YearEndTaxCalculator })));
+const NationalPensionCalculator = lazy(() => import('./components/calculators/NationalPensionCalculator').then((module) => ({ default: module.NationalPensionCalculator })));
+const HousingSubscriptionCalculator = lazy(() => import('./components/calculators/HousingSubscriptionCalculator').then((module) => ({ default: module.HousingSubscriptionCalculator })));
+const OvulationCalculator = lazy(() => import('./components/calculators/OvulationCalculator').then((module) => ({ default: module.OvulationCalculator })));
+const SleepCycleCalculator = lazy(() => import('./components/calculators/SleepCycleCalculator').then((module) => ({ default: module.SleepCycleCalculator })));
+const ExerciseCalorieCalculator = lazy(() => import('./components/calculators/ExerciseCalorieCalculator').then((module) => ({ default: module.ExerciseCalorieCalculator })));
+const BillSplitCalculator = lazy(() => import('./components/calculators/BillSplitCalculator').then((module) => ({ default: module.BillSplitCalculator })));
+const GiftMoneyCalculator = lazy(() => import('./components/calculators/GiftMoneyCalculator').then((module) => ({ default: module.GiftMoneyCalculator })));
+const MovingCostCalculator = lazy(() => import('./components/calculators/MovingCostCalculator').then((module) => ({ default: module.MovingCostCalculator })));
+const TimeZoneCalculator = lazy(() => import('./components/calculators/TimeZoneCalculator').then((module) => ({ default: module.TimeZoneCalculator })));
 
 const calculatorLoadingFallback = (
   <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
@@ -312,6 +323,28 @@ export default function App() {
         return <PregnancyCalculator onSaveHistory={saveToHistory} />;
       case 'evCharging':
         return <EvChargingCalculator onSaveHistory={saveToHistory} />;
+      case 'savingsInterest':
+        return <SavingsInterestCalculator onSaveHistory={saveToHistory} />;
+      case 'yearEndTax':
+        return <YearEndTaxCalculator onSaveHistory={saveToHistory} />;
+      case 'nationalPension':
+        return <NationalPensionCalculator onSaveHistory={saveToHistory} />;
+      case 'housingSubscription':
+        return <HousingSubscriptionCalculator onSaveHistory={saveToHistory} />;
+      case 'ovulation':
+        return <OvulationCalculator onSaveHistory={saveToHistory} />;
+      case 'sleepCycle':
+        return <SleepCycleCalculator onSaveHistory={saveToHistory} />;
+      case 'exerciseCalorie':
+        return <ExerciseCalorieCalculator onSaveHistory={saveToHistory} />;
+      case 'billSplit':
+        return <BillSplitCalculator onSaveHistory={saveToHistory} />;
+      case 'giftMoney':
+        return <GiftMoneyCalculator onSaveHistory={saveToHistory} />;
+      case 'movingCost':
+        return <MovingCostCalculator onSaveHistory={saveToHistory} />;
+      case 'timeZone':
+        return <TimeZoneCalculator onSaveHistory={saveToHistory} />;
       default:
         return <SalaryCalculator onSaveHistory={saveToHistory} />;
     }
