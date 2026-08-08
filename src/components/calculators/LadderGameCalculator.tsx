@@ -880,7 +880,10 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                   }`}
                   style={{
                     left: `${laneLeftPercents[i]}%`,
-                    width: `${Math.max(56, Math.floor(560 / laneCount))}px`,
+                    // Expressed as a % of the ladder's own width (not a fixed
+                    // px value) so tags shrink together with the canvas on
+                    // narrow mobile screens instead of overlapping.
+                    width: `${(Math.max(56, Math.floor(560 / laneCount)) / LADDER_WIDTH) * 100}%`,
                     backgroundColor: laneColor(i),
                   }}
                 >
@@ -903,7 +906,10 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
               <div
                 key={`result-tag-${i}`}
                 className="absolute -translate-x-1/2 text-center text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-md px-1.5 py-0.5 truncate"
-                style={{ left: `${laneLeftPercents[i]}%`, width: `${Math.max(36, Math.floor(460 / laneCount))}px` }}
+                style={{
+                  left: `${laneLeftPercents[i]}%`,
+                  width: `${(Math.max(36, Math.floor(460 / laneCount)) / LADDER_WIDTH) * 100}%`,
+                }}
               >
                 {results[i]}
               </div>
