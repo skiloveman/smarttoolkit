@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import * as Matter from 'matter-js';
 import { BookmarkPlus, RefreshCw } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
@@ -7,38 +8,48 @@ interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
 }
 
-const COLS = 6;
-const ROWS = 9;
-const EMPTY = -1;
-const MAX_LEVEL = 10;
-
-type Board = number[][];
-type Cell = { row: number; col: number };
-
 type FruitInfo = {
   name: string;
   emoji: string;
   points: number;
 };
 
+type FruitPlugin = {
+  level: number;
+  merging: boolean;
+  removed: boolean;
+  spawnTime: number;
+};
+
+type FruitBody = Matter.Body & { plugin: FruitPlugin };
+
 const FRUITS: FruitInfo[] = [
-  { name: '체리', emoji: '🍒', points: 8 },
-  { name: '딸기', emoji: '🍓', points: 12 },
-  { name: '포도', emoji: '🍇', points: 18 },
-  { name: '귤', emoji: '🍊', points: 26 },
-  { name: '사과', emoji: '🍎', points: 38 },
-  { name: '배', emoji: '🍐', points: 52 },
-  { name: '복숭아', emoji: '🍑', points: 70 },
-  { name: '멜론', emoji: '🍈', points: 92 },
-  { name: '파인애플', emoji: '🍍', points: 120 },
-  { name: '코코넛', emoji: '🥥', points: 156 },
-  { name: '수박', emoji: '🍉', points: 220 },
+  { name: '체리', emoji: '🍒', points: 1 },
+  { name: '딸기', emoji: '🍓', points: 3 },
+  { name: '포도', emoji: '🍇', points: 6 },
+  { name: '귤', emoji: '🍊', points: 10 },
+  { name: '사과', emoji: '🍎', points: 15 },
+  { name: '배', emoji: '🍐', points: 21 },
+  { name: '복숭아', emoji: '🍑', points: 28 },
+  { name: '멜론', emoji: '🍈', points: 36 },
+  { name: '파인애플', emoji: '🍍', points: 45 },
+  { name: '코코넛', emoji: '🥥', points: 55 },
+  { name: '수박', emoji: '🍉', points: 66 },
 ];
 
-const makeEmptyBoard = (): Board =>
-  Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => EMPTY));
+const MAX_LEVEL = FRUITS.length - 1;
 
-const inRange = (row: number, col: number) => row >= 0 && row < ROWS && col >= 0 && col < COLS;
+const BOARD_W = 300;
+const BOARD_H = 420;
+const WALL = 10;
+const LINE_Y = 78;
+const SPAWN_Y = 40;
+const DROP_COOLDOWN_MS = 260;
+const GAME_OVER_GRACE_MS = 1000;
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const radiusForLevel = (level: number) => 10 + level * 5;
 
 const randomSpawnLevel = () => {
   const roll = Math.random();
@@ -48,233 +59,413 @@ const randomSpawnLevel = () => {
   return 3;
 };
 
-const cloneBoard = (board: Board): Board => board.map((row) => [...row]);
+interface SavedFruit {
+  level: number;
+  x: number;
+  y: number;
+}
 
-const serializeBoard = (board: Board) => JSON.stringify(board);
+const normalizeSavedFruits = (raw: unknown): SavedFruit[] => {
+  if (!Array.isArray(raw)) return [];
 
-const normalizeBoard = (raw: unknown): Board => {
-  if (!Array.isArray(raw) || raw.length !== ROWS) {
-    return makeEmptyBoard();
+  const fruits: SavedFruit[] = [];
+  for (const entry of raw) {
+    if (!Array.isArray(entry) || entry.length !== 3) continue;
+    const [level, x, y] = entry;
+    if (
+      typeof level !== 'number' ||
+      typeof x !== 'number' ||
+      typeof y !== 'number' ||
+      !Number.isInteger(level) ||
+      level < 0 ||
+      level > MAX_LEVEL
+    ) {
+      continue;
+    }
+    fruits.push({ level, x: clamp(x, WALL, BOARD_W - WALL), y: clamp(y, 0, BOARD_H - WALL) });
   }
-
-  return raw.map((row) => {
-    if (!Array.isArray(row) || row.length !== COLS) {
-      return Array.from({ length: COLS }, () => EMPTY);
-    }
-
-    return row.map((cell) => {
-      if (typeof cell !== 'number' || !Number.isInteger(cell)) return EMPTY;
-      if (cell < EMPTY || cell > MAX_LEVEL) return EMPTY;
-      return cell;
-    });
-  });
+  return fruits;
 };
-
-const applyGravity = (board: Board): Board => {
-  const next = makeEmptyBoard();
-
-  for (let col = 0; col < COLS; col += 1) {
-    const stack: number[] = [];
-    for (let row = ROWS - 1; row >= 0; row -= 1) {
-      const value = board[row][col];
-      if (value !== EMPTY) {
-        stack.push(value);
-      }
-    }
-
-    for (let i = 0; i < stack.length; i += 1) {
-      next[ROWS - 1 - i][col] = stack[i];
-    }
-  }
-
-  return next;
-};
-
-const findFirstMergeCluster = (board: Board): Cell[] | null => {
-  const visited = Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => false));
-  const dirs = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1],
-  ];
-
-  for (let row = ROWS - 1; row >= 0; row -= 1) {
-    for (let col = 0; col < COLS; col += 1) {
-      const level = board[row][col];
-      if (level === EMPTY || level === MAX_LEVEL || visited[row][col]) {
-        continue;
-      }
-
-      const queue: Cell[] = [{ row, col }];
-      const cluster: Cell[] = [];
-      visited[row][col] = true;
-
-      while (queue.length > 0) {
-        const current = queue.shift() as Cell;
-        cluster.push(current);
-
-        for (const [dr, dc] of dirs) {
-          const nr = current.row + dr;
-          const nc = current.col + dc;
-          if (!inRange(nr, nc) || visited[nr][nc] || board[nr][nc] !== level) {
-            continue;
-          }
-          visited[nr][nc] = true;
-          queue.push({ row: nr, col: nc });
-        }
-      }
-
-      if (cluster.length >= 2) {
-        return cluster;
-      }
-    }
-  }
-
-  return null;
-};
-
-const resolveMerges = (inputBoard: Board) => {
-  let board = cloneBoard(inputBoard);
-  let gainedScore = 0;
-  let merged = false;
-
-  while (true) {
-    const cluster = findFirstMergeCluster(board);
-    if (!cluster) {
-      break;
-    }
-
-    const level = board[cluster[0].row][cluster[0].col];
-    const promotedLevel = Math.min(level + 1, MAX_LEVEL);
-
-    // Prefer the lowest and then leftmost cell as the merge anchor.
-    const anchor = cluster.reduce((best, curr) => {
-      if (curr.row > best.row) return curr;
-      if (curr.row === best.row && curr.col < best.col) return curr;
-      return best;
-    }, cluster[0]);
-
-    for (const cell of cluster) {
-      board[cell.row][cell.col] = EMPTY;
-    }
-    board[anchor.row][anchor.col] = promotedLevel;
-
-    const points = FRUITS[level].points * cluster.length + FRUITS[promotedLevel].points;
-    gainedScore += points;
-    merged = true;
-
-    board = applyGravity(board);
-  }
-
-  return { board, gainedScore, merged };
-};
-
-const getTopOccupiedCount = (board: Board) => board[0].filter((cell) => cell !== EMPTY).length;
-
-const boardHasWatermelon = (board: Board) =>
-  board.some((row) => row.some((cell) => cell === MAX_LEVEL));
 
 export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const saveHistory = onSaveHistory as SaveHistoryFn;
-  const [board, setBoard] = useState<Board>(makeEmptyBoard);
-  const [nextLevel, setNextLevel] = useState<number>(randomSpawnLevel);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const engineRef = useRef<Matter.Engine | null>(null);
+  const fruitsRef = useRef<FruitBody[]>([]);
+  const pendingMergesRef = useRef<{ a: FruitBody; b: FruitBody; isFinal: boolean }[]>([]);
+  const rafRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const dangerSinceRef = useRef<number | null>(null);
+  const dropXRef = useRef(BOARD_W / 2);
+  const nextLevelRef = useRef(randomSpawnLevel());
+  const canDropRef = useRef(true);
+  const gameOverRef = useRef(false);
+  const pendingRestoreRef = useRef<SavedFruit[] | null>(null);
+
+  const [nextLevel, setNextLevel] = useState(nextLevelRef.current);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [moveCount, setMoveCount] = useState(0);
   const [gameOver, setGameOver] = useState(false);
-  const [message, setMessage] = useState('같은 과일을 붙이면 더 큰 과일로 합쳐집니다.');
+  const [hasFruits, setHasFruits] = useState(false);
+  const [message, setMessage] = useState('포인터를 움직여 조준하고, 클릭(탭)해서 과일을 떨어뜨리세요.');
   const [saved, setSaved] = useState(false);
 
+  const nextFruit = FRUITS[nextLevel];
+
+  const clearWorld = () => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    Matter.World.clear(engine.world, false);
+    addWalls(engine);
+    fruitsRef.current = [];
+    pendingMergesRef.current = [];
+    setHasFruits(false);
+  };
+
+  const addWalls = (engine: Matter.Engine) => {
+    const floor = Matter.Bodies.rectangle(BOARD_W / 2, BOARD_H - WALL / 2, BOARD_W, WALL, {
+      isStatic: true,
+      label: 'wall',
+    });
+    const left = Matter.Bodies.rectangle(WALL / 2, BOARD_H / 2, WALL, BOARD_H, {
+      isStatic: true,
+      label: 'wall',
+    });
+    const right = Matter.Bodies.rectangle(BOARD_W - WALL / 2, BOARD_H / 2, WALL, BOARD_H, {
+      isStatic: true,
+      label: 'wall',
+    });
+    Matter.World.add(engine.world, [floor, left, right]);
+  };
+
+  const spawnFruit = (x: number, y: number, level: number): FruitBody => {
+    const radius = radiusForLevel(level);
+    const body = Matter.Bodies.circle(x, y, radius, {
+      restitution: 0.15,
+      friction: 0.2,
+      frictionStatic: 0.4,
+      frictionAir: 0.001,
+      density: 0.0018,
+      label: 'fruit',
+    }) as FruitBody;
+    body.plugin = { level, merging: false, removed: false, spawnTime: performance.now() };
+    return body;
+  };
+
+  const triggerGameOver = () => {
+    gameOverRef.current = true;
+    setGameOver(true);
+    setMessage('게임 오버! 과일이 빨간 선을 넘었습니다.');
+  };
+
+  const processMerges = () => {
+    const queue = pendingMergesRef.current;
+    if (queue.length === 0) return;
+    pendingMergesRef.current = [];
+
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    let addedScore = 0;
+    let watermelonMade = false;
+
+    queue.forEach(({ a, b, isFinal }) => {
+      if (a.plugin.removed || b.plugin.removed) return;
+      a.plugin.removed = true;
+      b.plugin.removed = true;
+
+      const midX = (a.position.x + b.position.x) / 2;
+      const midY = (a.position.y + b.position.y) / 2;
+
+      Matter.World.remove(engine.world, [a, b]);
+      fruitsRef.current = fruitsRef.current.filter((f) => f !== a && f !== b);
+
+      if (isFinal) {
+        addedScore += FRUITS[MAX_LEVEL].points * 2;
+        return;
+      }
+
+      const newLevel = a.plugin.level + 1;
+      const newBody = spawnFruit(midX, midY, newLevel);
+      Matter.World.add(engine.world, newBody);
+      fruitsRef.current.push(newBody);
+      addedScore += FRUITS[newLevel].points;
+
+      if (newLevel === MAX_LEVEL) {
+        watermelonMade = true;
+      }
+    });
+
+    if (addedScore > 0) {
+      setScore((prev) => {
+        const total = prev + addedScore;
+        setBestScore((best) => Math.max(best, total));
+        return total;
+      });
+      setMessage(watermelonMade ? '수박 완성! 계속해서 더 높은 점수에 도전하세요.' : '합치기 성공! 연쇄를 노려보세요.');
+    }
+  };
+
+  const checkGameOver = (now: number) => {
+    const anyDanger = fruitsRef.current.some((body) => {
+      if (body.plugin.removed) return false;
+      if (now - body.plugin.spawnTime < 500) return false;
+      const speed = Math.hypot(body.velocity.x, body.velocity.y);
+      if (speed > 0.3) return false;
+      return body.position.y - body.circleRadius < LINE_Y;
+    });
+
+    if (anyDanger) {
+      if (dangerSinceRef.current === null) {
+        dangerSinceRef.current = now;
+      } else if (now - dangerSinceRef.current > GAME_OVER_GRACE_MS) {
+        triggerGameOver();
+      }
+    } else {
+      dangerSinceRef.current = null;
+    }
+  };
+
+  const draw = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+
+    ctx.clearRect(0, 0, BOARD_W, BOARD_H);
+    ctx.fillStyle = isDark ? '#0f172a' : '#eff6ff';
+    ctx.fillRect(0, 0, BOARD_W, BOARD_H);
+
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(WALL, LINE_Y);
+    ctx.lineTo(BOARD_W - WALL, LINE_Y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    fruitsRef.current.forEach((body) => {
+      if (body.plugin.removed) return;
+      const { x, y } = body.position;
+      const r = body.circleRadius ?? radiusForLevel(body.plugin.level);
+      const fruit = FRUITS[body.plugin.level];
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(body.angle);
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.35)';
+      ctx.stroke();
+      ctx.font = `${Math.max(10, r * 1.3)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(fruit.emoji, 0, 1);
+      ctx.restore();
+    });
+
+    ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+    ctx.fillRect(0, BOARD_H - WALL, BOARD_W, WALL);
+    ctx.fillRect(0, 0, WALL, BOARD_H);
+    ctx.fillRect(BOARD_W - WALL, 0, WALL, BOARD_H);
+
+    if (!gameOverRef.current) {
+      const r = radiusForLevel(nextLevelRef.current);
+      const x = dropXRef.current;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(59, 130, 246, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, SPAWN_Y + r);
+      ctx.lineTo(x, BOARD_H - WALL);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.beginPath();
+      ctx.arc(x, SPAWN_Y, r, 0, Math.PI * 2);
+      ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.98)';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#3b82f6';
+      ctx.stroke();
+      ctx.font = `${Math.max(10, r * 1.3)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(FRUITS[nextLevelRef.current].emoji, x, SPAWN_Y + 1);
+    } else {
+      ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(15, 23, 42, 0.35)';
+      ctx.fillRect(0, 0, BOARD_W, BOARD_H);
+    }
+  };
+
+  useEffect(() => {
+    const engine = Matter.Engine.create();
+    engine.gravity.y = 1;
+    engineRef.current = engine;
+    addWalls(engine);
+
+    const handleCollision = (evt: Matter.IEventCollision<Matter.Engine>) => {
+      evt.pairs.forEach((pair) => {
+        const bodyA = pair.bodyA as FruitBody;
+        const bodyB = pair.bodyB as FruitBody;
+        if (bodyA.label !== 'fruit' || bodyB.label !== 'fruit') return;
+        if (bodyA.plugin.merging || bodyB.plugin.merging || bodyA.plugin.removed || bodyB.plugin.removed) return;
+        if (bodyA.plugin.level !== bodyB.plugin.level) return;
+
+        const isFinal = bodyA.plugin.level === MAX_LEVEL;
+        if (!isFinal && bodyA.plugin.level >= MAX_LEVEL) return;
+
+        bodyA.plugin.merging = true;
+        bodyB.plugin.merging = true;
+        pendingMergesRef.current.push({ a: bodyA, b: bodyB, isFinal });
+      });
+    };
+    Matter.Events.on(engine, 'collisionStart', handleCollision);
+
+    const loop = (time: number) => {
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = time;
+      }
+      const delta = Math.min(time - lastTimeRef.current, 1000 / 30);
+      lastTimeRef.current = time;
+
+      if (!gameOverRef.current) {
+        Matter.Engine.update(engine, delta);
+        processMerges();
+        checkGameOver(time);
+      }
+
+      draw();
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      Matter.Events.off(engine, 'collisionStart', handleCollision);
+      Matter.World.clear(engine.world, false);
+      Matter.Engine.clear(engine);
+      engineRef.current = null;
+    };
+  }, []);
+
   usePendingHistoryRestore<{
-    board: number[][];
+    fruits: number[][];
     nextLevel: number;
     score: number;
     bestScore: number;
     moveCount: number;
     gameOver: boolean;
   }>('watermelonGame', (restored) => {
-    const restoredBoard = normalizeBoard(restored.board);
-    setBoard(restoredBoard);
-    setNextLevel(
-      Number.isInteger(restored.nextLevel) && restored.nextLevel >= 0 && restored.nextLevel <= 3
+    const fruits = normalizeSavedFruits(restored.fruits);
+    pendingRestoreRef.current = fruits;
+
+    const engine = engineRef.current;
+    if (engine) {
+      Matter.World.clear(engine.world, false);
+      addWalls(engine);
+      fruitsRef.current = [];
+      pendingMergesRef.current = [];
+      fruits.forEach((f) => {
+        const body = spawnFruit(f.x, f.y, f.level);
+        Matter.World.add(engine.world, body);
+        fruitsRef.current.push(body);
+      });
+      setHasFruits(fruits.length > 0);
+    }
+
+    const restoredNextLevel =
+      Number.isInteger(restored.nextLevel) && restored.nextLevel >= 0 && restored.nextLevel <= MAX_LEVEL
         ? restored.nextLevel
-        : randomSpawnLevel()
-    );
+        : randomSpawnLevel();
+    nextLevelRef.current = restoredNextLevel;
+    setNextLevel(restoredNextLevel);
     setScore(Number.isFinite(restored.score) ? Math.max(0, restored.score) : 0);
     setBestScore(Number.isFinite(restored.bestScore) ? Math.max(0, restored.bestScore) : 0);
     setMoveCount(Number.isFinite(restored.moveCount) ? Math.max(0, restored.moveCount) : 0);
-    setGameOver(Boolean(restored.gameOver));
+    const restoredGameOver = Boolean(restored.gameOver);
+    gameOverRef.current = restoredGameOver;
+    setGameOver(restoredGameOver);
     setMessage('저장된 수박게임 상태를 불러왔습니다.');
   });
 
-  const isBoardEmpty = useMemo(
-    () => board.every((row) => row.every((cell) => cell === EMPTY)),
-    [board]
-  );
-
-  const nextFruit = FRUITS[nextLevel];
-
   const resetGame = () => {
-    setBoard(makeEmptyBoard());
-    setNextLevel(randomSpawnLevel());
+    clearWorld();
+    dangerSinceRef.current = null;
+    const level = randomSpawnLevel();
+    nextLevelRef.current = level;
+    setNextLevel(level);
     setScore(0);
     setMoveCount(0);
+    gameOverRef.current = false;
     setGameOver(false);
-    setMessage('새 게임을 시작합니다.');
+    setMessage('새 게임을 시작합니다. 포인터로 조준하고 클릭(탭)해서 떨어뜨리세요.');
   };
 
-  const dropAtColumn = (col: number) => {
-    if (gameOver) {
-      return;
-    }
+  const getLocalX = (clientX: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return BOARD_W / 2;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return BOARD_W / 2;
+    const scale = BOARD_W / rect.width;
+    return (clientX - rect.left) * scale;
+  };
 
-    let targetRow = -1;
-    for (let row = ROWS - 1; row >= 0; row -= 1) {
-      if (board[row][col] === EMPTY) {
-        targetRow = row;
-        break;
-      }
-    }
+  const updateAim = (clientX: number) => {
+    const r = radiusForLevel(nextLevelRef.current);
+    const x = clamp(getLocalX(clientX), WALL + r, BOARD_W - WALL - r);
+    dropXRef.current = x;
+  };
 
-    if (targetRow === -1) {
-      setMessage('해당 열이 가득 찼습니다. 다른 열을 선택하세요.');
-      return;
-    }
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (gameOverRef.current) return;
+    updateAim(e.clientX);
+  };
 
-    const placedBoard = cloneBoard(board);
-    placedBoard[targetRow][col] = nextLevel;
+  const handleDrop = (clientX: number) => {
+    if (gameOverRef.current || !canDropRef.current) return;
+    const engine = engineRef.current;
+    if (!engine) return;
 
-    const { board: resolvedBoard, gainedScore, merged } = resolveMerges(placedBoard);
-    const totalScore = score + FRUITS[nextLevel].points + gainedScore;
-    const over = getTopOccupiedCount(resolvedBoard) === COLS;
-    const hasWatermelon = boardHasWatermelon(resolvedBoard);
+    updateAim(clientX);
+    canDropRef.current = false;
 
-    setBoard(resolvedBoard);
-    setScore(totalScore);
-    setBestScore((prev) => Math.max(prev, totalScore));
+    const level = nextLevelRef.current;
+    const body = spawnFruit(dropXRef.current, SPAWN_Y, level);
+    Matter.World.add(engine.world, body);
+    fruitsRef.current.push(body);
+    setHasFruits(true);
+
+    const upcoming = randomSpawnLevel();
+    nextLevelRef.current = upcoming;
+    setNextLevel(upcoming);
     setMoveCount((prev) => prev + 1);
-    setNextLevel(randomSpawnLevel());
+    setMessage('좋아요! 같은 과일을 붙여서 더 큰 과일로 합쳐보세요.');
 
-    if (over) {
-      setGameOver(true);
-      setMessage('게임 오버! 보드가 가득 찼습니다.');
-      return;
-    }
-
-    if (hasWatermelon) {
-      setMessage('수박 완성! 계속해서 더 높은 점수에 도전하세요.');
-      return;
-    }
-
-    if (merged) {
-      setMessage('합치기 성공! 연쇄를 노려보세요.');
-    } else {
-      setMessage('좋아요! 같은 과일을 모아 붙여보세요.');
-    }
+    window.setTimeout(() => {
+      canDropRef.current = true;
+    }, DROP_COOLDOWN_MS);
   };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    handleDrop(e.clientX);
+  };
+
+  const collectFruitsForSave = (): number[][] =>
+    fruitsRef.current
+      .filter((f) => !f.plugin.removed)
+      .map((f) => [f.plugin.level, Math.round(f.position.x), Math.round(f.position.y)]);
 
   const handleSave = () => {
+    const savedFruits = collectFruitsForSave();
     saveHistory(
       '수박게임',
       `점수 ${score.toLocaleString()}점 · ${moveCount}수 진행`,
@@ -285,7 +476,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         상태: gameOver ? '게임오버' : '진행중',
       },
       {
-        board,
+        fruits: savedFruits,
         nextLevel,
         score,
         bestScore: Math.max(bestScore, score),
@@ -297,13 +488,15 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     setTimeout(() => setSaved(false), 1500);
   };
 
+  const isBoardEmpty = useMemo(() => !hasFruits, [hasFruits]);
+
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">수박게임</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            열을 선택해 과일을 떨어뜨리고, 같은 과일을 합쳐 수박까지 만드세요.
+            같은 과일끼리 맞닿으면 합쳐집니다. 빨간 선을 넘기지 않고 수박을 만들어보세요.
           </p>
         </div>
 
@@ -336,7 +529,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
             </div>
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{nextFruit.name}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">기본 점수 +{nextFruit.points}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">합체 점수 +{nextFruit.points}</p>
             </div>
           </div>
         </div>
@@ -357,55 +550,31 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="mx-auto w-full max-w-[16rem] [@media(orientation:landscape)_and_(max-width:767px)]:max-w-[18.5rem] sm:max-w-[22rem] grid grid-cols-6 gap-0.5 sm:gap-1">
-          {Array.from({ length: COLS }, (_, col) => (
-            <button
-              key={col}
-              type="button"
-              onClick={() => dropAtColumn(col)}
-              disabled={gameOver}
-              className="rounded-md border border-blue-200 dark:border-blue-900/60 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 py-0.5 [@media(orientation:landscape)_and_(max-width:767px)]:py-1.5 text-[10px] [@media(orientation:landscape)_and_(max-width:767px)]:text-[11px] sm:text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {col + 1}열
-            </button>
-          ))}
-        </div>
-
-        <div className="mx-auto w-full max-w-[16rem] [@media(orientation:landscape)_and_(max-width:767px)]:max-w-[18.5rem] sm:max-w-[22rem] rounded-xl border border-slate-200 dark:border-slate-700 p-1 sm:p-2 bg-white dark:bg-slate-900">
-          <div className="grid grid-cols-6 gap-0.5 sm:gap-1">
-            {board.map((row, rowIndex) =>
-              row.map((cell, colIndex) => (
-                <button
-                  key={`${rowIndex}-${colIndex}`}
-                  type="button"
-                  onClick={() => dropAtColumn(colIndex)}
-                  disabled={gameOver}
-                  className="aspect-square rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:cursor-not-allowed"
-                  title={cell === EMPTY ? '비어 있음' : FRUITS[cell].name}
-                >
-                  <span className="text-[15px] [@media(orientation:landscape)_and_(max-width:767px)]:text-lg sm:text-xl leading-none">{cell === EMPTY ? '' : FRUITS[cell].emoji}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+      <div className="mx-auto w-full max-w-[300px]">
+        <canvas
+          ref={canvasRef}
+          width={BOARD_W}
+          height={BOARD_H}
+          onPointerMove={handlePointerMove}
+          onPointerDown={handlePointerDown}
+          className="w-full h-auto rounded-xl border border-slate-200 dark:border-slate-700 touch-none cursor-crosshair"
+          style={{ touchAction: 'none' }}
+        />
       </div>
 
       <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/40 px-4 py-3">
         <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">{message}</p>
         <p className="mt-1 text-xs text-amber-700 dark:text-amber-200">
           {isBoardEmpty
-            ? '시작하려면 위의 열 버튼을 눌러 과일을 떨어뜨리세요.'
+            ? '박스 위에서 포인터를 좌우로 움직여 조준한 뒤 클릭(탭)하면 과일이 떨어집니다.'
             : gameOver
               ? '새 게임 버튼으로 다시 시작할 수 있습니다.'
-              : '같은 과일이 상하좌우로 붙으면 자동으로 합쳐집니다.'}
+              : '같은 과일이 서로 맞닿으면 자동으로 합쳐지고, 빨간 선을 넘긴 채 멈추면 게임이 끝납니다.'}
         </p>
       </div>
 
       <div className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-        점수 규칙: 과일 배치 기본점수 + 합치기 시 클러스터 크기 보너스가 누적됩니다.
-        수박(🍉)을 만들면 게임은 계속되며, 더 높은 점수를 노릴 수 있습니다.
+        점수 규칙: 두 과일이 합쳐질 때마다 결과 과일의 점수가 누적됩니다. 수박(🍉)끼리 합치면 큰 보너스 점수와 함께 사라집니다.
       </div>
     </div>
   );
