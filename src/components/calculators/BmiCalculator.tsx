@@ -109,34 +109,34 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
           {/* Age */}
           <div>
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              <span>나이</span>
-              <span className="font-bold text-blue-600 dark:text-blue-400">{age}세</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">나이</label>
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={age}
+                onChange={(e) => setAge(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all pr-10"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">세</span>
             </div>
-            <input
-              type="range"
-              min="10"
-              max="90"
-              value={age}
-              onChange={(e) => setAge(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer"
-            />
           </div>
 
-          {/* Height Slider & Number */}
+          {/* Height */}
           <div>
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              <span>신장 (키)</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{heightCm} cm</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (키)</label>
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                max={250}
+                value={heightCm}
+                onChange={(e) => setHeightCm(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all pr-12"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">cm</span>
             </div>
-            <input
-              type="range"
-              min="120"
-              max="210"
-              value={heightCm}
-              onChange={(e) => setHeightCm(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer"
-            />
             <div className="mt-2 flex justify-between gap-2">
               {[155, 165, 172, 180, 188].map((h) => (
                 <button
@@ -154,20 +154,20 @@ export const BmiCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             </div>
           </div>
 
-          {/* Weight Slider & Number */}
+          {/* Weight */}
           <div>
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              <span>체중 (몸무게)</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{weightKg} kg</span>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">체중 (몸무게)</label>
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                max={300}
+                value={weightKg}
+                onChange={(e) => setWeightKg(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all pr-12"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
             </div>
-            <input
-              type="range"
-              min="30"
-              max="150"
-              value={weightKg}
-              onChange={(e) => setWeightKg(Number(e.target.value))}
-              className="w-full accent-emerald-500 cursor-pointer"
-            />
             <div className="mt-2 flex justify-between gap-2">
               {[50, 60, 70, 80, 90].map((w) => (
                 <button

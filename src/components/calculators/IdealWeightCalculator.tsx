@@ -85,11 +85,18 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div>
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            <span>신장 (키)</span>
-            <span className="font-bold text-teal-600 dark:text-teal-400">{heightCm} cm</span>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">신장 (키)</label>
+          <div className="relative">
+            <input
+              type="number"
+              min={1}
+              max={250}
+              value={heightCm}
+              onChange={(e) => setHeightCm(Math.max(0, Number(e.target.value) || 0))}
+              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">cm</span>
           </div>
-          <input type="range" min="100" max="230" value={heightCm} onChange={(e) => setHeightCm(Number(e.target.value))} className="w-full accent-teal-500 cursor-pointer" />
           <div className="mt-2 flex justify-between gap-2">
             {[155, 165, 172, 180, 188].map((h) => (
               <button key={h} onClick={() => setHeightCm(h)} className={`px-2 py-1 rounded text-[11px] font-medium ${heightCm === h ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
@@ -100,11 +107,18 @@ export const IdealWeightCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div>
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            <span>현재 체중</span>
-            <span className="font-bold text-teal-600 dark:text-teal-400">{currentWeightKg} kg</span>
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">현재 체중</label>
+          <div className="relative">
+            <input
+              type="number"
+              min={1}
+              max={300}
+              value={currentWeightKg}
+              onChange={(e) => setCurrentWeightKg(Math.max(0, Number(e.target.value) || 0))}
+              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">kg</span>
           </div>
-          <input type="range" min="20" max="250" value={currentWeightKg} onChange={(e) => setCurrentWeightKg(Number(e.target.value))} className="w-full accent-teal-500 cursor-pointer" />
           <div className="mt-2 flex justify-between gap-2">
             {[50, 60, 70, 80, 90].map((w) => (
               <button key={w} onClick={() => setCurrentWeightKg(w)} className={`px-2 py-1 rounded text-[11px] font-medium ${currentWeightKg === w ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
