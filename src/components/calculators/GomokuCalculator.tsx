@@ -22,8 +22,6 @@ interface Coord {
   col: number;
 }
 
-type ForbiddenType = 'none' | 'doubleThree' | 'doubleFour' | 'overline';
-
 interface DirectionInfo {
   length: number;
   openEnds: number;
@@ -107,8 +105,6 @@ const normalizeBoard = (raw: unknown): Player[][] => {
   });
 };
 
-const coordLabel = (row: number, col: number) => `${COL_LABELS[col]}${row + 1}`;
-
 const analyzeDirection = (board: Player[][], row: number, col: number, player: 1 | 2, dr: number, dc: number): DirectionInfo => {
   let length = 1;
   let minR = row;
@@ -148,30 +144,6 @@ const analyzeDirection = (board: Player[][], row: number, col: number, player: 1
     length,
     openEnds: Number(openBefore) + Number(openAfter),
   };
-};
-
-const getForbiddenType = (board: Player[][], row: number, col: number, player: 1 | 2): ForbiddenType => {
-  if (player !== 1) {
-    return 'none';
-  }
-
-  const lines = DIRECTIONS.map(([dr, dc]) => analyzeDirection(board, row, col, player, dr, dc));
-  const hasOverline = lines.some((line) => line.length >= 6);
-  if (hasOverline) {
-    return 'overline';
-  }
-
-  const openThreeCount = lines.filter((line) => line.length === 3 && line.openEnds === 2).length;
-  if (openThreeCount >= 2) {
-    return 'doubleThree';
-  }
-
-  const fourCount = lines.filter((line) => line.length === 4 && line.openEnds >= 1).length;
-  if (fourCount >= 2) {
-    return 'doubleFour';
-  }
-
-  return 'none';
 };
 
 const wouldWinByMove = (board: Player[][], row: number, col: number, player: 1 | 2) => {
@@ -304,8 +276,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [moveCount, setMoveCount] = useState(0);
   const [moves, setMoves] = useState<Move[]>([]);
   const [winningLine, setWinningLine] = useState<Coord[]>([]);
-  const [lastMove, setLastMove] = useState<Coord | null>(null);
-  const [forbiddenRules, setForbiddenRules] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [saved, setSaved] = useState(false);
   const [hoverCell, setHoverCell] = useState<Coord | null>(null);
@@ -361,8 +331,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     moveCount: number;
     moveStrings: string[];
     winningLineStrings: string[];
-    lastMoveString?: string;
-    forbiddenRules?: boolean;
     aiEnabled?: boolean;
   }>('gomoku', (restored) => {
     const normalized = normalizeBoard(restored.board);
@@ -370,7 +338,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setCurrentPlayer(restored.currentPlayer === 2 ? 2 : 1);
     setWinner(restored.winner === 1 || restored.winner === 2 || restored.winner === 3 ? restored.winner : 0);
     setMoveCount(Number.isFinite(restored.moveCount) ? Math.max(0, Math.min(BOARD_SIZE * BOARD_SIZE, restored.moveCount)) : 0);
-    setForbiddenRules(Boolean(restored.forbiddenRules));
     setAiEnabled(Boolean(restored.aiEnabled));
     setMoves(
       Array.isArray(restored.moveStrings)
@@ -379,8 +346,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             .filter((move): move is Move => move !== null && inRange(move.row) && inRange(move.col))
         : []
     );
-    const restoredLastMove = typeof restored.lastMoveString === 'string' ? decodeCoord(restored.lastMoveString) : null;
-    setLastMove(restoredLastMove && inRange(restoredLastMove.row) && inRange(restoredLastMove.col) ? restoredLastMove : null);
     setWinningLine(
       Array.isArray(restored.winningLineStrings)
         ? restored.winningLineStrings
@@ -395,8 +360,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     () => new Set(winningLine.map((cell) => `${cell.row}-${cell.col}`)),
     [winningLine]
   );
-
-  const lastMoveKey = lastMove ? `${lastMove.row}-${lastMove.col}` : null;
 
   useEffect(() => {
     if (!aiEnabled || winner !== 0 || currentPlayer !== 2) {
@@ -423,20 +386,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const nextBoard = board.map((r) => [...r]);
     nextBoard[row][col] = currentPlayer;
 
-    if (forbiddenRules && currentPlayer === 1) {
-      const forbiddenType = getForbiddenType(nextBoard, row, col, currentPlayer);
-      if (forbiddenType !== 'none') {
-        if (forbiddenType === 'doubleThree') {
-          alert('금수(33) 위치에는 착수할 수 없습니다.');
-        } else if (forbiddenType === 'doubleFour') {
-          alert('금수(44) 위치에는 착수할 수 없습니다.');
-        } else {
-          alert('금수(장목) 위치에는 착수할 수 없습니다.');
-        }
-        return;
-      }
-    }
-
     const nextMove: Move = { row, col, player: currentPlayer };
     const nextMoveCount = moveCount + 1;
 
@@ -449,7 +398,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setBoard(nextBoard);
     setMoves((prev) => [...prev, nextMove]);
     setMoveCount(nextMoveCount);
-    setLastMove({ row, col });
 
     if (line) {
       setWinner(currentPlayer);
@@ -481,8 +429,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setCurrentPlayer(last.player);
     setWinner(0);
     setWinningLine([]);
-    const prevMove = moves.length >= 2 ? moves[moves.length - 2] : null;
-    setLastMove(prevMove ? { row: prevMove.row, col: prevMove.col } : null);
   };
 
   const handleReset = () => {
@@ -492,7 +438,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setMoveCount(0);
     setMoves([]);
     setWinningLine([]);
-    setLastMove(null);
     setSaved(false);
   };
 
@@ -509,7 +454,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       총착수: moveCount,
       보드크기: `${BOARD_SIZE}x${BOARD_SIZE}`,
       대국모드: aiEnabled ? 'AI 대전' : '2인 대전',
-      금수규칙: forbiddenRules ? '사용' : '미사용',
     }, {
       board,
       currentPlayer,
@@ -517,8 +461,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       moveCount,
       moveStrings: moves.map(encodeMove),
       winningLineStrings: winningLine.map(encodeCoord),
-      lastMoveString: lastMove ? encodeCoord(lastMove) : '',
-      forbiddenRules,
       aiEnabled,
     });
 
@@ -672,18 +614,12 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         }
 
         const isWinningCell = winningCellSet.has(key);
-        const isLastMove = lastMoveKey === key;
         if (isWinningCell) {
           ctx.beginPath();
           ctx.arc(x, y, r * 0.95, 0, Math.PI * 2);
           ctx.lineWidth = 2.5;
           ctx.strokeStyle = '#22c55e';
           ctx.stroke();
-        } else if (isLastMove) {
-          ctx.beginPath();
-          ctx.arc(x, y, r * 0.3, 0, Math.PI * 2);
-          ctx.fillStyle = cell === 1 ? 'rgba(255,255,255,0.85)' : 'rgba(59,130,246,0.85)';
-          ctx.fill();
         }
       }
     }
@@ -749,57 +685,38 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-            {statusLabel}
-          </span>
           <span className="px-2.5 py-1 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400">
             {moveCount}수
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1 flex items-center gap-1 text-xs font-semibold">
-          <button
-            type="button"
-            onClick={() => setAiEnabled(false)}
-            className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
-              !aiEnabled
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            2인 대국
-          </button>
-          <button
-            type="button"
-            onClick={() => setAiEnabled(true)}
-            className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
-              aiEnabled
-                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            인공지능 대국(VS AI)
-          </button>
-        </div>
-
-        <label className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between gap-3">
-          <span>흑 금수 규칙 (33/44/장목)</span>
-          <input
-            type="checkbox"
-            checked={forbiddenRules}
-            onChange={(e) => setForbiddenRules(e.target.checked)}
-            className="accent-amber-500"
-          />
-        </label>
-
-        <div className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-400">
-          최근 착수: <span className="font-semibold text-slate-800 dark:text-slate-200">{lastMove ? coordLabel(lastMove.row, lastMove.col) : '-'}</span>
-        </div>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1 flex items-center gap-1 text-xs font-semibold max-w-md">
+        <button
+          type="button"
+          onClick={() => setAiEnabled(false)}
+          className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
+            !aiEnabled
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          2인 대국
+        </button>
+        <button
+          type="button"
+          onClick={() => setAiEnabled(true)}
+          className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
+            aiEnabled
+              ? 'bg-violet-600 text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          인공지능 대국(VS AI)
+        </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={handleUndo}
           disabled={moves.length === 0}
@@ -818,6 +735,16 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </button>
 
         <button
+          type="button"
+          onClick={toggleSound}
+          title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+          aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"
+        >
+          {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+        </button>
+
+        <button
           onClick={handleSave}
           className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5"
         >
@@ -827,16 +754,27 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-2 sm:p-3">
-        <div className="flex items-center justify-end mb-1 px-1">
-          <button
-            type="button"
-            onClick={toggleSound}
-            title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
-            className="inline-flex items-center justify-center p-1.5 rounded-lg bg-white/60 dark:bg-black/20 text-amber-800 dark:text-amber-300 hover:bg-white dark:hover:bg-black/40 transition-colors"
+        <div className="flex items-center justify-center mb-2">
+          <span
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold ${
+              winner === 1 || winner === 2
+                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
+                : winner === 3
+                ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                : 'bg-white/80 dark:bg-black/30 text-amber-900 dark:text-amber-200'
+            }`}
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-          </button>
+            {winner === 0 && (
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  currentPlayer === 1
+                    ? 'bg-slate-900 border border-slate-600'
+                    : 'bg-white border border-slate-400'
+                }`}
+              />
+            )}
+            {statusLabel}
+          </span>
         </div>
         <div className="w-full max-w-[640px] mx-auto p-1 sm:p-2">
           <div className="mb-1 flex pl-[20px] sm:pl-[24px]">
