@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { BookmarkPlus, RefreshCw, Undo2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { BookmarkPlus, RefreshCw, Undo2, Volume2, VolumeX } from 'lucide-react';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
+import { StoneSoundPlayer } from '../../utils/gomokuSounds';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -65,6 +66,25 @@ const DIRECTIONS: Array<[number, number]> = [
 ];
 const COL_LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.slice(0, BOARD_SIZE).split('');
 const CENTER = Math.floor(BOARD_SIZE / 2);
+
+const BOARD_PX = 600;
+const BOARD_PADDING = 28;
+const CELL_PX = (BOARD_PX - BOARD_PADDING * 2) / (BOARD_SIZE - 1);
+const HOSHI_LINES = [3, 7, 11];
+const HOSHI_POINTS: Coord[] = HOSHI_LINES.flatMap((row) => HOSHI_LINES.map((col) => ({ row, col })));
+const STONE_ANIM_MS = 240;
+
+const toPx = (index: number) => BOARD_PADDING + index * CELL_PX;
+const nearestIndex = (px: number) => clamp(Math.round((px - BOARD_PADDING) / CELL_PX), 0, BOARD_SIZE - 1);
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+// Small overshoot pop so a newly placed stone settles like it was set down
+// by hand — https://easings.net/#easeOutBack
+const easeOutBack = (t: number) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+};
 
 const inRange = (value: number) => value >= 0 && value < BOARD_SIZE;
 
@@ -289,6 +309,51 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [message, setMessage] = useState<string>('');
   const [saved, setSaved] = useState(false);
+  const [hoverCell, setHoverCell] = useState<Coord | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const placedAtRef = useRef<Map<string, number>>(new Map());
+  const drawRef = useRef<() => boolean | undefined>(() => undefined);
+  const soundRef = useRef<StoneSoundPlayer | null>(null);
+  if (!soundRef.current) {
+    soundRef.current = new StoneSoundPlayer();
+  }
+
+  useEffect(() => {
+    try {
+      const savedPref = localStorage.getItem('gomoku_sound_enabled');
+      if (savedPref !== null) {
+        setSoundEnabled(savedPref === 'true');
+      }
+    } catch {
+      // Ignore unavailable localStorage.
+    }
+  }, []);
+
+  useEffect(() => {
+    soundRef.current?.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    return () => {
+      soundRef.current?.close();
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('gomoku_sound_enabled', String(next));
+      } catch {
+        // Ignore write failures.
+      }
+      return next;
+    });
+  };
 
   usePendingHistoryRestore<{
     board: number[][];
@@ -378,6 +443,10 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     const nextMoveCount = moveCount + 1;
 
     const line = findWinningLine(nextBoard, row, col, currentPlayer);
+
+    placedAtRef.current.set(`${row}-${col}`, performance.now());
+    soundRef.current?.playPlace();
+    startPlacementAnimation();
 
     setBoard(nextBoard);
     setMoves((prev) => [...prev, nextMove]);
@@ -478,6 +547,180 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
   const recentMoves = moves.slice(-6).reverse();
 
+  const draw = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const now = performance.now();
+
+    ctx.clearRect(0, 0, BOARD_PX, BOARD_PX);
+
+    const bgGrad = ctx.createLinearGradient(0, 0, BOARD_PX, BOARD_PX);
+    bgGrad.addColorStop(0, '#e8bd6f');
+    bgGrad.addColorStop(0.5, '#dba957');
+    bgGrad.addColorStop(1, '#c8933f');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, BOARD_PX, BOARD_PX);
+
+    ctx.strokeStyle = 'rgba(120, 76, 24, 0.09)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 34; i += 1) {
+      const y = (i / 34) * BOARD_PX + Math.sin(i * 12.9) * 4;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.bezierCurveTo(BOARD_PX * 0.3, y + 6, BOARD_PX * 0.7, y - 6, BOARD_PX, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(90, 58, 20, 0.55)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, BOARD_PX - 4, BOARD_PX - 4);
+
+    ctx.strokeStyle = 'rgba(59, 35, 11, 0.88)';
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < BOARD_SIZE; i += 1) {
+      const p = toPx(i);
+      ctx.beginPath();
+      ctx.moveTo(toPx(0), p);
+      ctx.lineTo(toPx(BOARD_SIZE - 1), p);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(p, toPx(0));
+      ctx.lineTo(p, toPx(BOARD_SIZE - 1));
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(59, 35, 11, 0.92)';
+    HOSHI_POINTS.forEach((pt) => {
+      ctx.beginPath();
+      ctx.arc(toPx(pt.col), toPx(pt.row), 3.2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    const canPlace = winner === 0 && !(aiEnabled && currentPlayer === 2);
+    if (hoverCell && canPlace && board[hoverCell.row][hoverCell.col] === 0) {
+      ctx.beginPath();
+      ctx.arc(toPx(hoverCell.col), toPx(hoverCell.row), CELL_PX * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = currentPlayer === 1 ? 'rgba(15,15,15,0.32)' : 'rgba(255,255,255,0.5)';
+      ctx.fill();
+    }
+
+    let stillAnimating = false;
+
+    for (let row = 0; row < BOARD_SIZE; row += 1) {
+      for (let col = 0; col < BOARD_SIZE; col += 1) {
+        const cell = board[row][col];
+        if (cell === 0) continue;
+
+        const key = `${row}-${col}`;
+        const x = toPx(col);
+        const y = toPx(row);
+        const placedAt = placedAtRef.current.get(key);
+        const age = placedAt !== undefined ? now - placedAt : STONE_ANIM_MS + 1;
+        const baseR = CELL_PX * 0.44;
+        let r = baseR;
+        if (age < STONE_ANIM_MS) {
+          stillAnimating = true;
+          const t = clamp(age / STONE_ANIM_MS, 0, 1);
+          r = Math.max(0, baseR * easeOutBack(t));
+        }
+        if (r <= 0) continue;
+
+        ctx.beginPath();
+        ctx.ellipse(x + r * 0.16, y + r * 0.22, r * 0.94, r * 0.82, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fill();
+
+        const grad = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+        if (cell === 1) {
+          grad.addColorStop(0, '#5c5c5c');
+          grad.addColorStop(0.55, '#222222');
+          grad.addColorStop(1, '#000000');
+        } else {
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.6, '#e8e4da');
+          grad.addColorStop(1, '#bdb8ac');
+        }
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        if (cell === 2) {
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = 'rgba(120, 110, 90, 0.6)';
+          ctx.stroke();
+        }
+
+        const isWinningCell = winningCellSet.has(key);
+        const isLastMove = lastMoveKey === key;
+        if (isWinningCell) {
+          ctx.beginPath();
+          ctx.arc(x, y, r * 0.95, 0, Math.PI * 2);
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#22c55e';
+          ctx.stroke();
+        } else if (isLastMove) {
+          ctx.beginPath();
+          ctx.arc(x, y, r * 0.3, 0, Math.PI * 2);
+          ctx.fillStyle = cell === 1 ? 'rgba(255,255,255,0.85)' : 'rgba(59,130,246,0.85)';
+          ctx.fill();
+        }
+      }
+    }
+
+    return stillAnimating;
+  };
+
+  // Always points at the current render's draw() so the rAF animation loop
+  // below never keeps redrawing with a stale board/winner closure from the
+  // render that kicked it off.
+  drawRef.current = draw;
+
+  useEffect(() => {
+    draw();
+  });
+
+  const startPlacementAnimation = () => {
+    if (rafRef.current !== null) return;
+    const tick = () => {
+      const stillAnimating = drawRef.current();
+      if (stillAnimating) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
+  const getCellFromEvent = (e: React.PointerEvent<HTMLCanvasElement>): Coord | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const scaleX = BOARD_PX / rect.width;
+    const scaleY = BOARD_PX / rect.height;
+    const px = (e.clientX - rect.left) * scaleX;
+    const py = (e.clientY - rect.top) * scaleY;
+    return { row: nearestIndex(py), col: nearestIndex(px) };
+  };
+
+  const handleBoardPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    setHoverCell(getCellFromEvent(e));
+  };
+
+  const handleBoardPointerLeave = () => setHoverCell(null);
+
+  const handleBoardClick = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (winner !== 0 || (aiEnabled && currentPlayer === 2)) return;
+    const cell = getCellFromEvent(e);
+    if (!cell) return;
+    placeStone(cell.row, cell.col);
+  };
+
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs space-y-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -562,8 +805,19 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-3">
+        <div className="flex items-center justify-end mb-1 px-1">
+          <button
+            type="button"
+            onClick={toggleSound}
+            title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            className="inline-flex items-center justify-center p-1.5 rounded-lg bg-white/60 dark:bg-black/20 text-amber-800 dark:text-amber-300 hover:bg-white dark:hover:bg-black/40 transition-colors"
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
+        </div>
         <div className="w-full overflow-auto">
-          <div className="mx-auto min-w-[340px] max-w-[760px] p-2">
+          <div className="mx-auto min-w-[340px] max-w-[640px] p-2">
             <div className="mb-1 flex pl-[24px]">
               {COL_LABELS.map((label) => (
                 <div
@@ -587,62 +841,16 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
                 ))}
               </div>
 
-              <div className="relative flex-1 aspect-square rounded-md bg-amber-100 dark:bg-amber-900/30">
-                {Array.from({ length: BOARD_SIZE }, (_, i) => {
-                  const pct = (i / (BOARD_SIZE - 1)) * 100;
-                  return (
-                    <React.Fragment key={`grid-line-${i}`}>
-                      <div
-                        className="absolute bg-amber-800/45 dark:bg-amber-700/60"
-                        style={{ left: `${pct}%`, top: 0, bottom: 0, width: 1 }}
-                      />
-                      <div
-                        className="absolute bg-amber-800/45 dark:bg-amber-700/60"
-                        style={{ top: `${pct}%`, left: 0, right: 0, height: 1 }}
-                      />
-                    </React.Fragment>
-                  );
-                })}
-
-                {board.map((row, rowIndex) =>
-                  row.map((cell, colIndex) => {
-                    const key = `${rowIndex}-${colIndex}`;
-                    const isWinningCell = winningCellSet.has(key);
-                    const isLastMove = lastMoveKey === key;
-                    const leftPct = (colIndex / (BOARD_SIZE - 1)) * 100;
-                    const topPct = (rowIndex / (BOARD_SIZE - 1)) * 100;
-
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => placeStone(rowIndex, colIndex)}
-                        disabled={winner !== 0 || cell !== 0 || (aiEnabled && currentPlayer === 2)}
-                        aria-label={`${rowIndex + 1}행 ${colIndex + 1}열`}
-                        className="absolute flex items-center justify-center disabled:cursor-default group"
-                        style={{
-                          left: `${leftPct}%`,
-                          top: `${topPct}%`,
-                          width: `${100 / (BOARD_SIZE - 1)}%`,
-                          height: `${100 / (BOARD_SIZE - 1)}%`,
-                          transform: 'translate(-50%, -50%)',
-                        }}
-                      >
-                        {cell !== 0 ? (
-                          <span
-                            className={`w-[78%] h-[78%] rounded-full border shadow-sm ${
-                              cell === 1
-                                ? 'bg-slate-900 border-slate-800'
-                                : 'bg-slate-50 border-slate-300'
-                            } ${isWinningCell ? 'ring-2 ring-emerald-500' : ''} ${isLastMove ? 'ring-2 ring-blue-500/20' : ''}`}
-                          />
-                        ) : (
-                          <span className="w-[42%] h-[42%] rounded-full group-hover:bg-amber-300/50 dark:group-hover:bg-amber-600/25 transition-colors" />
-                        )}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              <canvas
+                ref={canvasRef}
+                width={BOARD_PX}
+                height={BOARD_PX}
+                onPointerMove={handleBoardPointerMove}
+                onPointerLeave={handleBoardPointerLeave}
+                onPointerDown={handleBoardClick}
+                className="flex-1 w-full h-auto rounded-md shadow-inner touch-none cursor-pointer"
+                style={{ touchAction: 'none' }}
+              />
             </div>
           </div>
         </div>
