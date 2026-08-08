@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, RefreshCw, BookmarkPlus } from 'lucide-react';
+import { Play, RefreshCw, BookmarkPlus, Volume2, VolumeX } from 'lucide-react';
 import { DefaultValueInput } from '../DefaultValueInput';
 import { SaveHistoryFn } from '../../types';
 import { usePendingHistoryRestore } from '../../utils/historyRestore';
+import { LadderSoundPlayer } from '../../utils/ladderSounds';
 
 interface Props {
   onSaveHistory: (title: string, summary: string, details: Record<string, string | number>) => void;
@@ -316,14 +317,48 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [activeStartLane, setActiveStartLane] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [saved, setSaved] = useState<boolean>(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const rafRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const soundRef = useRef<LadderSoundPlayer | null>(null);
+  const lastTickAtRef = useRef<number>(0);
+  if (!soundRef.current) {
+    soundRef.current = new LadderSoundPlayer();
+  }
+
+  useEffect(() => {
+    try {
+      const savedPref = localStorage.getItem('ladder_sound_enabled');
+      if (savedPref !== null) {
+        setSoundEnabled(savedPref === 'true');
+      }
+    } catch {
+      // Ignore unavailable localStorage (private browsing, etc.)
+    }
+  }, []);
+
+  useEffect(() => {
+    soundRef.current?.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ladder_sound_enabled', String(next));
+      } catch {
+        // Ignore write failures.
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     return () => {
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
       }
+      soundRef.current?.close();
     };
   }, []);
 
@@ -464,6 +499,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
     setIsAnimating(true);
     setActiveStartLane(startLane);
+    lastTickAtRef.current = 0;
 
     const startedAt = performance.now();
 
@@ -477,6 +513,11 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         return next;
       });
 
+      if (progress < 1 && now - lastTickAtRef.current > 110) {
+        lastTickAtRef.current = now;
+        soundRef.current?.playTraceTick();
+      }
+
       if (progress >= 1) {
         setIsAnimating(false);
         setActiveStartLane(null);
@@ -485,6 +526,7 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           next[startLane] = true;
           return next;
         });
+        soundRef.current?.playLanding();
         rafRef.current = null;
         return;
       }
@@ -796,7 +838,16 @@ export const LadderGameCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="rounded-2xl border border-slate-800 bg-black p-4 overflow-x-hidden">
-        <div className="flex items-center justify-end mb-2 px-1">
+        <div className="flex items-center justify-between gap-2 mb-2 px-1">
+          <button
+            type="button"
+            onClick={toggleSound}
+            title={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            className="inline-flex items-center justify-center p-1.5 rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 transition-colors"
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
           <span className="text-[11px] text-slate-300">
             {activeStartLane !== null
               ? `${names[activeStartLane]} 진행 중...`

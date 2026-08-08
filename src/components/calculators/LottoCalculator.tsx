@@ -357,39 +357,42 @@ export const LottoCalculator: React.FC<Props> = ({ onSaveHistory }) => {
           {games.slice(0, gameCount).map((game, idx) => (
             <div
               key={idx}
-              className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-amber-300 dark:hover:border-amber-800/60 transition-all"
+              className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2.5 hover:border-amber-300 dark:hover:border-amber-800/60 transition-all"
             >
-              <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 font-black text-xs flex items-center justify-center border border-amber-200 dark:border-amber-900 shrink-0">
-                  {labels[idx]}
-                </span>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">
-                  자동선택
-                </span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 font-black text-xs flex items-center justify-center border border-amber-200 dark:border-amber-900 shrink-0">
+                    {labels[idx]}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0">
+                    자동선택
+                  </span>
+                </div>
 
-                {/* 6 Lotto Balls (HTML canvas, rendered as glossy spheres) */}
-                <canvas
-                  ref={(el) => {
-                    ballCanvasRefs.current[idx] = el;
+                {/* Copy Single Game */}
+                <button
+                  onClick={() => {
+                    const text = `[${labels[idx]}게임] ${game.join(', ')}`;
+                    navigator.clipboard.writeText(text);
+                    alert(`${labels[idx]}게임 번호가 복사되었습니다.`);
                   }}
-                  width={BALL_CANVAS_W}
-                  height={BALL_CANVAS_H}
-                  className={`transition-all duration-150 ${isGenerating ? 'scale-90 opacity-70' : 'scale-100 opacity-100'}`}
-                  style={{ maxWidth: '100%', height: 'auto' }}
-                />
+                  className="text-[11px] font-medium text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors shrink-0"
+                >
+                  조합 복사
+                </button>
               </div>
 
-              {/* Copy Single Game */}
-              <button
-                onClick={() => {
-                  const text = `[${labels[idx]}게임] ${game.join(', ')}`;
-                  navigator.clipboard.writeText(text);
-                  alert(`${labels[idx]}게임 번호가 복사되었습니다.`);
+              {/* 6 Lotto Balls (HTML canvas, rendered as glossy spheres), full row
+                  width so they stay legible at a glance on narrow mobile screens */}
+              <canvas
+                ref={(el) => {
+                  ballCanvasRefs.current[idx] = el;
                 }}
-                className="text-[11px] font-medium text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 self-end sm:self-center transition-colors"
-              >
-                조합 복사
-              </button>
+                width={BALL_CANVAS_W}
+                height={BALL_CANVAS_H}
+                className={`w-full transition-all duration-150 ${isGenerating ? 'scale-90 opacity-70' : 'scale-100 opacity-100'}`}
+                style={{ maxWidth: `${BALL_CANVAS_W}px`, height: 'auto' }}
+              />
             </div>
           ))}
         </div>

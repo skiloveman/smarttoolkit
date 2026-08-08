@@ -816,7 +816,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         </div>
       </div>
 
-      <div className="rounded-2xl bg-black p-4 sm:p-6">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center gap-5">
           <div className="w-full max-w-[300px] shrink-0">
             <canvas
@@ -825,22 +825,30 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
               height={BOARD_H}
               onPointerMove={handlePointerMove}
               onPointerDown={handlePointerDown}
-              className="w-full h-auto rounded-xl border border-white/10 touch-none cursor-crosshair"
+              className="w-full h-auto rounded-xl bg-black touch-none cursor-crosshair"
               style={{ touchAction: 'none' }}
             />
           </div>
 
-          <div className="w-full sm:w-40 shrink-0">
-            <h5 className="text-[11px] font-bold text-white/70 uppercase tracking-wider mb-2 text-center sm:text-left">
+          <div className="w-full sm:w-44 shrink-0">
+            <h5 className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 text-center sm:text-left">
               Fruit Merge Evolution
             </h5>
             <div className="flex flex-row sm:flex-col flex-wrap justify-center gap-1.5">
               {FRUITS.map((fruit, idx) => (
-                <div key={fruit.name} className="flex items-center gap-2 rounded-lg bg-white/10 px-2 py-1.5">
+                <div
+                  key={fruit.name}
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1.5"
+                >
                   <span className="text-base leading-none">{fruit.emoji}</span>
-                  <span className="text-[11px] font-semibold text-white/85 whitespace-nowrap">{fruit.name}</span>
+                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                    {fruit.name}
+                  </span>
+                  <span className="ml-auto text-[10px] font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    +{fruit.points}
+                  </span>
                   {idx < FRUITS.length - 1 && (
-                    <span className="ml-auto text-white/30 text-xs hidden sm:inline">↓</span>
+                    <span className="text-slate-300 dark:text-slate-600 text-xs hidden sm:inline">↓</span>
                   )}
                 </div>
               ))}
