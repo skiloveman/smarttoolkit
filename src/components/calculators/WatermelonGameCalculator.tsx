@@ -331,10 +331,8 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const isDark = document.documentElement.classList.contains('dark');
-
     ctx.clearRect(0, 0, BOARD_W, BOARD_H);
-    ctx.fillStyle = isDark ? '#0f172a' : '#eff6ff';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, BOARD_W, BOARD_H);
 
     ctx.setLineDash([6, 4]);
@@ -376,10 +374,10 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       ctx.scale(scaleX, scaleY);
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       ctx.fill();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.35)';
+      ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
       ctx.stroke();
       ctx.font = `${Math.max(10, r * 1.3)}px sans-serif`;
       ctx.textAlign = 'center';
@@ -388,7 +386,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       ctx.restore();
     });
 
-    ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+    ctx.fillStyle = '#cbd5e1';
     ctx.fillRect(0, BOARD_H - WALL, BOARD_W, WALL);
     ctx.fillRect(0, 0, WALL, BOARD_H);
     ctx.fillRect(BOARD_W - WALL, 0, WALL, BOARD_H);
@@ -425,7 +423,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       const r = radiusForLevel(nextLevelRef.current);
       const x = dropXRef.current;
       ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.35)' : 'rgba(59, 130, 246, 0.3)';
+      ctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x, SPAWN_Y + r);
@@ -435,7 +433,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
 
       ctx.beginPath();
       ctx.arc(x, SPAWN_Y, r, 0, Math.PI * 2);
-      ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.98)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
       ctx.fill();
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#3b82f6';
@@ -445,7 +443,7 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
       ctx.textBaseline = 'middle';
       ctx.fillText(FRUITS[nextLevelRef.current].emoji, x, SPAWN_Y + 1);
     } else {
-      ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(15, 23, 42, 0.35)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
       ctx.fillRect(0, 0, BOARD_W, BOARD_H);
     }
   };
