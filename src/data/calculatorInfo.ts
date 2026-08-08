@@ -188,7 +188,7 @@ export const CALCULATOR_LIST: CalculatorMeta[] = [
     id: 'bloodAlcohol',
     name: '음주 알코올분해시간 계산기',
     shortDesc: '성별·체중·음주량 기준 위드마크 공식으로 예상 혈중알코올농도와 완전 분해 시간 추정',
-    category: 'life',
+    category: 'health',
     iconName: 'Wine',
     badge: '위드마크 공식 기반 추정',
   },
