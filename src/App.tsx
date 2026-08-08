@@ -59,9 +59,33 @@ const calculatorLoadingFallback = (
   </div>
 );
 
+const SITE_URL = 'https://www.smart-toolkit.com';
+
+// Matches the static defaults baked into index.html — restored whenever the
+// active calculator resolves back to the root path so the homepage keeps its
+// broad, brand-level SEO metadata instead of a single calculator's.
+const HOME_META = {
+  title: '스마트 툴킷 | 연봉·BMI·퇴직금·부가세·환율 생활 계산기',
+  description: '연봉 실수령액, BMI, 대출 이자, 퇴직금, 부가세, 전기요금, 환율, 퍼센트, 사다리, 로또까지 한 번에 계산하는 스마트 툴킷.',
+};
+
+// Root path renders the default calculator (salary); every other calculator
+// gets its own path so it can be linked to, refreshed, and listed in the sitemap.
+const pathForCalc = (id: CalculatorId): string => (id === 'salary' ? '/' : `/${id}`);
+
+const calcIdFromPath = (pathname: string): CalculatorId | null => {
+  const slug = pathname.replace(/^\/+|\/+$/g, '');
+  if (!slug) return 'salary';
+  const match = CALCULATOR_LIST.find((c) => c.id === slug);
+  return match ? match.id : null;
+};
+
 export default function App() {
   const [activeCategory, setActiveCategory] = useState<CalculatorCategory>('all');
-  const [activeCalcId, setActiveCalcId] = useState<CalculatorId>('salary');
+  const [activeCalcId, setActiveCalcId] = useState<CalculatorId>(() => {
+    if (typeof window === 'undefined') return 'salary';
+    return calcIdFromPath(window.location.pathname) ?? 'salary';
+  });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('theme') === 'dark';
@@ -117,6 +141,56 @@ export default function App() {
     return () => window.clearTimeout(timeoutId);
   }, [latestSavedHistoryId]);
 
+  // Keep the URL in sync with the active calculator so each one is a real,
+  // linkable, refreshable, sitemap-eligible page.
+  const navigateToCalc = (id: CalculatorId) => {
+    setActiveCalcId(id);
+    const path = pathForCalc(id);
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  };
+
+  // Handle browser back/forward navigation between calculator pages.
+  useEffect(() => {
+    const onPopState = () => {
+      const id = calcIdFromPath(window.location.pathname);
+      if (id) {
+        setActiveCalcId(id);
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Keep <title>, meta description, canonical/OG/Twitter tags in sync with the
+  // active calculator so each URL carries its own distinct, indexable metadata.
+  useEffect(() => {
+    const meta = CALCULATOR_LIST.find((c) => c.id === activeCalcId);
+    if (!meta) return;
+
+    const path = pathForCalc(activeCalcId);
+    const isHome = path === '/';
+    const canonicalUrl = `${SITE_URL}${path}`;
+    const title = isHome ? HOME_META.title : `${meta.name} | 스마트 툴킷`;
+    const description = isHome ? HOME_META.description : meta.shortDesc;
+
+    document.title = title;
+
+    const setMeta = (selector: string, attr: 'content' | 'href', value: string) => {
+      const el = document.querySelector(selector);
+      if (el) el.setAttribute(attr, value);
+    };
+
+    setMeta('meta[name="description"]', 'content', description);
+    setMeta('link[rel="canonical"]', 'href', canonicalUrl);
+    setMeta('meta[property="og:title"]', 'content', title);
+    setMeta('meta[property="og:description"]', 'content', description);
+    setMeta('meta[property="og:url"]', 'content', canonicalUrl);
+    setMeta('meta[name="twitter:title"]', 'content', title);
+    setMeta('meta[name="twitter:description"]', 'content', description);
+  }, [activeCalcId]);
+
   // Save history to LocalStorage
   const saveToHistory: SaveHistoryFn = (
     title: string,
@@ -161,7 +235,7 @@ export default function App() {
 
     queuePendingHistoryRestore(item);
     setActiveCategory(calcMeta?.category ?? 'all');
-    setActiveCalcId(item.calculatorId);
+    navigateToCalc(item.calculatorId);
     setCalculatorRenderNonce((prev) => prev + 1);
     setIsHistoryOpen(false);
 
@@ -256,13 +330,13 @@ export default function App() {
               (c) => cat === 'all' || c.category === cat
             );
             if (firstInCategory) {
-              setActiveCalcId(firstInCategory.id);
+              navigateToCalc(firstInCategory.id);
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           activeCalcId={activeCalcId}
           onSelectCalc={(id) => {
-            setActiveCalcId(id);
+            navigateToCalc(id);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
           searchQuery={searchQuery}
@@ -331,7 +405,7 @@ export default function App() {
             activeCategory={activeCategory}
             activeCalcId={activeCalcId}
             onSelectCalc={(id) => {
-              setActiveCalcId(id);
+              navigateToCalc(id);
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             searchQuery={searchQuery}

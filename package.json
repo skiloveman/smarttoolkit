@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "generate:rss": "tsx scripts/generate-rss.ts",
-    "prebuild": "tsx scripts/generate-rss.ts",
+    "generate:sitemap": "tsx scripts/generate-sitemap.ts",
+    "prebuild": "tsx scripts/generate-rss.ts && tsx scripts/generate-sitemap.ts",
     "build": "vite build",
     "deploy": "node ./scripts/deploy-pages.mjs",
     "preview": "vite preview",
