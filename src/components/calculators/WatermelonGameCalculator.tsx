@@ -816,16 +816,37 @@ export const WatermelonGameCalculator: React.FC<Props> = ({ onSaveHistory }) => 
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[300px]">
-        <canvas
-          ref={canvasRef}
-          width={BOARD_W}
-          height={BOARD_H}
-          onPointerMove={handlePointerMove}
-          onPointerDown={handlePointerDown}
-          className="w-full h-auto rounded-xl border border-slate-200 dark:border-slate-700 touch-none cursor-crosshair"
-          style={{ touchAction: 'none' }}
-        />
+      <div className="rounded-2xl bg-black p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-center gap-5">
+          <div className="w-full max-w-[300px] shrink-0">
+            <canvas
+              ref={canvasRef}
+              width={BOARD_W}
+              height={BOARD_H}
+              onPointerMove={handlePointerMove}
+              onPointerDown={handlePointerDown}
+              className="w-full h-auto rounded-xl border border-white/10 touch-none cursor-crosshair"
+              style={{ touchAction: 'none' }}
+            />
+          </div>
+
+          <div className="w-full sm:w-40 shrink-0">
+            <h5 className="text-[11px] font-bold text-white/70 uppercase tracking-wider mb-2 text-center sm:text-left">
+              Fruit Merge Evolution
+            </h5>
+            <div className="flex flex-row sm:flex-col flex-wrap justify-center gap-1.5">
+              {FRUITS.map((fruit, idx) => (
+                <div key={fruit.name} className="flex items-center gap-2 rounded-lg bg-white/10 px-2 py-1.5">
+                  <span className="text-base leading-none">{fruit.emoji}</span>
+                  <span className="text-[11px] font-semibold text-white/85 whitespace-nowrap">{fruit.name}</span>
+                  {idx < FRUITS.length - 1 && (
+                    <span className="ml-auto text-white/30 text-xs hidden sm:inline">↓</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/40 px-4 py-3">
