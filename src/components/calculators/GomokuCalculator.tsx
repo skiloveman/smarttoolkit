@@ -307,7 +307,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
   const [lastMove, setLastMove] = useState<Coord | null>(null);
   const [forbiddenRules, setForbiddenRules] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(false);
-  const [message, setMessage] = useState<string>('');
   const [saved, setSaved] = useState(false);
   const [hoverCell, setHoverCell] = useState<Coord | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -390,7 +389,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             .slice(0, 5)
         : []
     );
-    setMessage('저장된 대국을 복원했습니다.');
   });
 
   const winningCellSet = useMemo(
@@ -411,13 +409,13 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     }
 
     const timer = window.setTimeout(() => {
-      placeStone(aiMove.row, aiMove.col, { byAi: true });
+      placeStone(aiMove.row, aiMove.col);
     }, 220);
 
     return () => window.clearTimeout(timer);
   }, [aiEnabled, winner, currentPlayer, board]);
 
-  const placeStone = (row: number, col: number, options?: { byAi?: boolean }) => {
+  const placeStone = (row: number, col: number) => {
     if (winner !== 0 || board[row][col] !== 0) {
       return;
     }
@@ -429,11 +427,11 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       const forbiddenType = getForbiddenType(nextBoard, row, col, currentPlayer);
       if (forbiddenType !== 'none') {
         if (forbiddenType === 'doubleThree') {
-          setMessage('금수(33) 위치에는 착수할 수 없습니다.');
+          alert('금수(33) 위치에는 착수할 수 없습니다.');
         } else if (forbiddenType === 'doubleFour') {
-          setMessage('금수(44) 위치에는 착수할 수 없습니다.');
+          alert('금수(44) 위치에는 착수할 수 없습니다.');
         } else {
-          setMessage('금수(장목) 위치에는 착수할 수 없습니다.');
+          alert('금수(장목) 위치에는 착수할 수 없습니다.');
         }
         return;
       }
@@ -452,23 +450,16 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setMoves((prev) => [...prev, nextMove]);
     setMoveCount(nextMoveCount);
     setLastMove({ row, col });
-    setMessage(
-      options?.byAi
-        ? `AI가 ${coordLabel(row, col)}에 착수했습니다.`
-        : `${playerLabel(currentPlayer)}이(가) ${coordLabel(row, col)}에 착수했습니다.`
-    );
 
     if (line) {
       setWinner(currentPlayer);
       setWinningLine(line);
-      setMessage(`${playerLabel(currentPlayer)} 승리 (${coordLabel(row, col)})`);
       return;
     }
 
     if (nextMoveCount >= BOARD_SIZE * BOARD_SIZE) {
       setWinner(3);
       setWinningLine([]);
-      setMessage('무승부입니다.');
       return;
     }
 
@@ -492,7 +483,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setWinningLine([]);
     const prevMove = moves.length >= 2 ? moves[moves.length - 2] : null;
     setLastMove(prevMove ? { row: prevMove.row, col: prevMove.col } : null);
-    setMessage('한 수를 되돌렸습니다.');
   };
 
   const handleReset = () => {
@@ -503,7 +493,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
     setMoves([]);
     setWinningLine([]);
     setLastMove(null);
-    setMessage('새 판을 시작했습니다.');
     setSaved(false);
   };
 
@@ -535,7 +524,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
 
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1500);
-    setMessage('현재 대국을 저장했습니다.');
   };
 
   const statusLabel =
@@ -544,8 +532,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       : winner === 3
       ? '무승부'
       : `${playerLabel(currentPlayer)} 차례`;
-
-  const recentMoves = moves.slice(-6).reverse();
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -742,28 +728,37 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <label className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between gap-3">
-          <span>AI 대전 (백 자동)</span>
-          <input
-            type="checkbox"
-            checked={aiEnabled}
-            onChange={(e) => {
-              setAiEnabled(e.target.checked);
-              setMessage(e.target.checked ? 'AI 대전 모드를 켰습니다.' : '2인 대전 모드로 전환했습니다.');
-            }}
-            className="accent-blue-600"
-          />
-        </label>
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-1 flex items-center gap-1 text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => setAiEnabled(false)}
+            className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
+              !aiEnabled
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            2인 대국
+          </button>
+          <button
+            type="button"
+            onClick={() => setAiEnabled(true)}
+            className={`flex-1 px-2 py-1.5 rounded-md transition-colors ${
+              aiEnabled
+                ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            인공지능 대국(VS AI)
+          </button>
+        </div>
 
         <label className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center justify-between gap-3">
           <span>흑 금수 규칙 (33/44/장목)</span>
           <input
             type="checkbox"
             checked={forbiddenRules}
-            onChange={(e) => {
-              setForbiddenRules(e.target.checked);
-              setMessage(e.target.checked ? '금수 규칙을 적용합니다.' : '금수 규칙을 해제했습니다.');
-            }}
+            onChange={(e) => setForbiddenRules(e.target.checked)}
             className="accent-amber-500"
           />
         </label>
@@ -771,10 +766,6 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         <div className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-400">
           최근 착수: <span className="font-semibold text-slate-800 dark:text-slate-200">{lastMove ? coordLabel(lastMove.row, lastMove.col) : '-'}</span>
         </div>
-      </div>
-
-      <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-        {message || '좌표를 클릭해 착수하세요.'}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -804,7 +795,7 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-3">
+      <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/70 dark:bg-amber-900/10 p-2 sm:p-3">
         <div className="flex items-center justify-end mb-1 px-1">
           <button
             type="button"
@@ -816,60 +807,41 @@ export const GomokuCalculator: React.FC<Props> = ({ onSaveHistory }) => {
             {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
           </button>
         </div>
-        <div className="w-full overflow-auto">
-          <div className="mx-auto min-w-[340px] max-w-[640px] p-2">
-            <div className="mb-1 flex pl-[24px]">
-              {COL_LABELS.map((label) => (
+        <div className="w-full max-w-[640px] mx-auto p-1 sm:p-2">
+          <div className="mb-1 flex pl-[20px] sm:pl-[24px]">
+            {COL_LABELS.map((label) => (
+              <div
+                key={label}
+                className="flex-1 text-center text-[9px] sm:text-[10px] font-semibold text-amber-800 dark:text-amber-300"
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex">
+            <div className="flex flex-col w-[20px] sm:w-[24px]">
+              {Array.from({ length: BOARD_SIZE }, (_, rowIndex) => (
                 <div
-                  key={label}
-                  className="flex-1 text-center text-[10px] font-semibold text-amber-800 dark:text-amber-300"
+                  key={`row-label-${rowIndex}`}
+                  className="flex-1 flex items-center justify-center text-[9px] sm:text-[10px] font-semibold text-amber-800 dark:text-amber-300"
                 >
-                  {label}
+                  {rowIndex + 1}
                 </div>
               ))}
             </div>
 
-            <div className="flex">
-              <div className="flex flex-col w-[24px]">
-                {Array.from({ length: BOARD_SIZE }, (_, rowIndex) => (
-                  <div
-                    key={`row-label-${rowIndex}`}
-                    className="flex-1 flex items-center justify-center text-[10px] font-semibold text-amber-800 dark:text-amber-300"
-                  >
-                    {rowIndex + 1}
-                  </div>
-                ))}
-              </div>
-
-              <canvas
-                ref={canvasRef}
-                width={BOARD_PX}
-                height={BOARD_PX}
-                onPointerMove={handleBoardPointerMove}
-                onPointerLeave={handleBoardPointerLeave}
-                onPointerDown={handleBoardClick}
-                className="flex-1 w-full h-auto rounded-md shadow-inner touch-none cursor-pointer"
-                style={{ touchAction: 'none' }}
-              />
-            </div>
+            <canvas
+              ref={canvasRef}
+              width={BOARD_PX}
+              height={BOARD_PX}
+              onPointerMove={handleBoardPointerMove}
+              onPointerLeave={handleBoardPointerLeave}
+              onPointerDown={handleBoardClick}
+              className="flex-1 min-w-0 w-full h-auto rounded-md shadow-inner touch-none cursor-pointer"
+              style={{ touchAction: 'none' }}
+            />
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 p-3">
-        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">최근 착수 로그</div>
-        <div className="flex flex-wrap gap-1.5">
-          {recentMoves.length === 0 && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">아직 착수 기록이 없습니다.</span>
-          )}
-          {recentMoves.map((move, idx) => (
-            <span
-              key={`${move.row}-${move.col}-${idx}`}
-              className="px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-300"
-            >
-              {playerLabel(move.player)} {coordLabel(move.row, move.col)}
-            </span>
-          ))}
         </div>
       </div>
     </div>
