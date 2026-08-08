@@ -14,6 +14,7 @@ import {
   Calculator,
   ArrowRight,
   Flame,
+  Star,
   Sparkles,
   Sparkle,
   Landmark,
@@ -42,9 +43,18 @@ interface Props {
   activeCalcId: CalculatorId;
   onSelectCalc: (id: CalculatorId) => void;
   searchQuery: string;
+  favoriteIds: CalculatorId[];
+  onToggleFavorite: (id: CalculatorId) => void;
 }
 
-export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, onSelectCalc, searchQuery }) => {
+export const QuickNavGrid: React.FC<Props> = ({
+  activeCategory,
+  activeCalcId,
+  onSelectCalc,
+  searchQuery,
+  favoriteIds,
+  onToggleFavorite,
+}) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'Banknote':
@@ -114,7 +124,9 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, on
 
   const filtered = CALCULATOR_LIST.filter(
     (c) =>
-      (activeCategory === 'all' || c.category === activeCategory) &&
+      (activeCategory === 'all' ||
+        c.category === activeCategory ||
+        (activeCategory === 'favorites' && favoriteIds.includes(c.id))) &&
       (
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.shortDesc.toLowerCase().includes(searchQuery.toLowerCase())
@@ -125,27 +137,58 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, on
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-extrabold text-gray-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-          <Flame className="w-4 h-4 text-rose-500" />
-          <span>필수 Smart ToolKit 전체 바로가기</span>
+          {activeCategory === 'favorites' ? (
+            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+          ) : (
+            <Flame className="w-4 h-4 text-rose-500" />
+          )}
+          <span>{activeCategory === 'favorites' ? '내 즐겨찾기' : '필수 Smart ToolKit 전체 바로가기'}</span>
         </h2>
         <span className="text-xs text-gray-400">총 {filtered.length}개 도구 제공</span>
       </div>
 
+      {activeCategory === 'favorites' && filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-16 rounded-2xl border border-dashed border-gray-200 dark:border-slate-800 text-center">
+          <Star className="w-8 h-8 text-gray-300 dark:text-slate-700" />
+          <p className="text-sm font-semibold text-gray-500 dark:text-slate-400">
+            아직 즐겨찾기한 계산기가 없어요
+          </p>
+          <p className="text-xs text-gray-400 dark:text-slate-500">
+            계산기 카드의 별 아이콘을 눌러 즐겨찾기에 추가해보세요
+          </p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((calc) => {
           const isActive = activeCalcId === calc.id;
+          const isFavorite = favoriteIds.includes(calc.id);
           return (
             <div
               key={calc.id}
               onClick={() => onSelectCalc(calc.id)}
-              className={`group p-6 rounded-2xl border shadow-xs transition-all cursor-pointer flex flex-col justify-between ${
+              className={`group relative p-6 rounded-2xl border shadow-xs transition-all cursor-pointer flex flex-col justify-between ${
                 isActive
                   ? 'border-blue-500 bg-white dark:bg-slate-900 ring-2 ring-blue-500/20'
                   : 'border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-gray-300 dark:hover:border-slate-700 hover:shadow-sm'
               }`}
             >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite(calc.id);
+                }}
+                className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+              >
+                <Star
+                  className={`w-4 h-4 transition-colors ${
+                    isFavorite ? 'text-amber-400 fill-amber-400' : 'text-gray-300 dark:text-slate-600'
+                  }`}
+                />
+              </button>
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 pr-8">
                   <div className="p-2 bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 rounded-lg group-hover:scale-105 transition-transform">
                     {getIcon(calc.iconName)}
                   </div>
@@ -172,6 +215,7 @@ export const QuickNavGrid: React.FC<Props> = ({ activeCategory, activeCalcId, on
           );
         })}
       </div>
+      )}
     </div>
   );
 };

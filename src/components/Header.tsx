@@ -7,7 +7,7 @@ import {
   Moon,
   Sun,
   History,
-  Bookmark,
+  Star,
   Banknote,
   Activity,
   Coins,
@@ -40,6 +40,8 @@ interface HeaderProps {
   onOpenHistory: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  favoriteIds: CalculatorId[];
+  onToggleFavorite: (id: CalculatorId) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -53,6 +55,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenHistory,
   darkMode,
   onToggleDarkMode,
+  favoriteIds,
+  onToggleFavorite,
 }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -177,6 +181,7 @@ export const Header: React.FC<HeaderProps> = ({
         <nav className="flex items-center gap-6 overflow-x-auto py-2.5 border-t border-gray-100 dark:border-slate-800/80 no-scrollbar text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-slate-400">
           {[
             { id: 'all', label: 'ALL TOOLS' },
+            { id: 'favorites', label: `즐겨찾기${favoriteIds.length > 0 ? ` (${favoriteIds.length})` : ''}` },
             { id: 'finance', label: 'FINANCE' },
             { id: 'health', label: 'HEALTH' },
             { id: 'life', label: 'UTILITIES' },
@@ -185,12 +190,17 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               key={cat.id}
               onClick={() => onSelectCategory(cat.id as CalculatorCategory)}
-              className={`py-1 transition-all whitespace-nowrap cursor-pointer border-b-2 ${
+              className={`flex items-center gap-1 py-1 transition-all whitespace-nowrap cursor-pointer border-b-2 ${
                 activeCategory === cat.id
                   ? 'text-blue-600 dark:text-blue-400 font-bold border-blue-600 dark:border-blue-400'
                   : 'border-transparent hover:text-gray-900 dark:hover:text-slate-200'
               }`}
             >
+              {cat.id === 'favorites' && (
+                <Star
+                  className={`w-3.5 h-3.5 ${activeCategory === 'favorites' ? 'fill-current' : ''}`}
+                />
+              )}
               {cat.label}
             </button>
           ))}
@@ -199,24 +209,44 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Quick Horizontal Calculator List */}
         <div className="flex items-center gap-1.5 overflow-x-auto py-2 border-t border-gray-100 dark:border-slate-800/40 no-scrollbar">
           {CALCULATOR_LIST.filter(
-            (c) => activeCategory === 'all' || c.category === activeCategory
+            (c) =>
+              activeCategory === 'all' ||
+              c.category === activeCategory ||
+              (activeCategory === 'favorites' && favoriteIds.includes(c.id))
           ).map((c) => {
             const isActive = activeCalcId === c.id;
+            const isFavorite = favoriteIds.includes(c.id);
             return (
-              <button
+              <div
                 key={c.id}
-                onClick={() => onSelectCalc(c.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
+                className={`flex items-center gap-0.5 pl-3 pr-1.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
                   isActive
                     ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-bold shadow-2xs'
                     : 'border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 hover:border-gray-300'
                 }`}
               >
-                <span className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}>
-                  {getIcon(c.iconName)}
-                </span>
-                <span>{c.name}</span>
-              </button>
+                <button onClick={() => onSelectCalc(c.id)} className="flex items-center gap-1.5 cursor-pointer">
+                  <span className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}>
+                    {getIcon(c.iconName)}
+                  </span>
+                  <span>{c.name}</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(c.id);
+                  }}
+                  className="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                  title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                  aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                >
+                  <Star
+                    className={`w-3.5 h-3.5 transition-colors ${
+                      isFavorite ? 'text-amber-400 fill-amber-400' : 'text-gray-300 dark:text-slate-600'
+                    }`}
+                  />
+                </button>
+              </div>
             );
           })}
         </div>

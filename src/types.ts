@@ -1,4 +1,4 @@
-export type CalculatorCategory = 'all' | 'finance' | 'health' | 'life' | 'games';
+export type CalculatorCategory = 'all' | 'finance' | 'health' | 'life' | 'games' | 'favorites';
 
 export type CalculatorId = 
   | 'salary' 

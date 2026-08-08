@@ -111,6 +111,15 @@ export default function App() {
     }
   });
 
+  const [favoriteIds, setFavoriteIds] = useState<CalculatorId[]>(() => {
+    try {
+      const saved = localStorage.getItem('calc_favorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [calculatorRenderNonce, setCalculatorRenderNonce] = useState(0);
   const [saveToast, setSaveToast] = useState<{ key: number; message: string } | null>(null);
@@ -233,6 +242,18 @@ export default function App() {
     setSaveToast({
       key: Date.now(),
       message: `${calcMeta ? calcMeta.name : title} 저장됨`,
+    });
+  };
+
+  const toggleFavorite = (id: CalculatorId) => {
+    setFavoriteIds((prev) => {
+      const updated = prev.includes(id) ? prev.filter((favId) => favId !== id) : [...prev, id];
+      try {
+        localStorage.setItem('calc_favorites', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save favorites', e);
+      }
+      return updated;
     });
   };
 
@@ -360,7 +381,10 @@ export default function App() {
             setActiveCategory(cat);
             setSearchQuery('');
             const firstInCategory = CALCULATOR_LIST.find(
-              (c) => cat === 'all' || c.category === cat
+              (c) =>
+                cat === 'all' ||
+                c.category === cat ||
+                (cat === 'favorites' && favoriteIds.includes(c.id))
             );
             if (firstInCategory) {
               navigateToCalc(firstInCategory.id);
@@ -378,6 +402,8 @@ export default function App() {
           onOpenHistory={() => setIsHistoryOpen(true)}
           darkMode={darkMode}
           onToggleDarkMode={() => setDarkMode(!darkMode)}
+          favoriteIds={favoriteIds}
+          onToggleFavorite={toggleFavorite}
         />
 
         {/* Main Content Container */}
@@ -442,6 +468,8 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             searchQuery={searchQuery}
+            favoriteIds={favoriteIds}
+            onToggleFavorite={toggleFavorite}
           />
         </main>
       </div>
